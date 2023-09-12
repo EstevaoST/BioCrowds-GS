@@ -86,7 +86,7 @@ public class VisualAgent : MonoBehaviour
 
     }
 
-    public void Initialize(Vector3 pos, Agent p_agent)
+    public void Initialize(Vector3 pos, Biocrowds.Core.Agent p_agent)
     {
         //transform.Rotate(Vector3.right,-90) ;
         anim = GetComponent<Animator>();
