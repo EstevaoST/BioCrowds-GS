@@ -20,65 +20,64 @@ namespace Biocrowds.Core
         [Header("Simulation Configuration")]
         public SimulationConfiguration.MarkerSpawnMethod markerSpawnMethod;
 
-        [SerializeField] private float SIMULATION_TIME_STEP = 0.02f;
+        [SerializeField] public bool simulateOnUpdate = true;        
 
-        [SerializeField] private float MAX_AGENTS = 0;
+        [SerializeField] public float MAX_AGENTS = 0;
         //agent radius
-        [SerializeField] private float AGENT_RADIUS = 1.00f;
+        [SerializeField] public float AGENT_RADIUS = 1.00f;
 
         //radius for auxin collide
-        [SerializeField] private float AUXIN_RADIUS = 0.1f;
+        [SerializeField] public float AUXIN_RADIUS = 0.1f;
 
         //density
-        [SerializeField] private float AUXIN_DENSITY = 0.50f;
+        [SerializeField] public float AUXIN_DENSITY = 0.50f;
 
-        [SerializeField] private float GOAL_DISTANCE_THRESHOLD = 1.0f;
+        [SerializeField] public float GOAL_DISTANCE_THRESHOLD = 1.0f;
 
 
         [Header("Terrain Setting")]
         public MeshFilter planeMeshFilter;
 
-        [SerializeField]
-        private Terrain _terrain;
+        [SerializeField] protected Terrain _terrain;
+        [SerializeField] protected Transform _terrainObject;
 
         [SerializeField]
-        private Vector2 _dimension = new Vector2(30.0f, 20.0f);
+        protected Vector2 _dimension = new Vector2(30.0f, 20.0f);
         public Vector2 Dimension
         {
             get { return _dimension; }
         }
 
         [SerializeField]
-        private Vector2 _offset = new Vector2(0.0f, 0.0f);
+        protected Vector2 _offset = new Vector2(0.0f, 0.0f);
         public Vector2 Offset
         {
             get { return _offset; }
         }
-        //number of agents in the scene
-        [SerializeField]
-        private int _maxAgents = 30;
 
         //agent prefab
         [SerializeField]
-        private List<Agent> _agentPrefabList;
+        protected List<Agent> _agentPrefabList;
 
         [SerializeField]
-        private Cell _cellPrefab;
+        protected Cell _cellPrefab;
 
         [SerializeField]
-        private Auxin _auxinPrefab;
+        protected Auxin _auxinPrefab;
 
 
         [SerializeField]
-        private List<Agent> _agents = new List<Agent>();
+        protected List<Agent> _agents = new List<Agent>();
+        public List<Agent> Agents => _agents;
         List<Cell> _cells = new List<Cell>();
         List<Auxin> _auxins = new List<Auxin>();
 
-        public List<SpawnArea> spawnAreas;
+        [SerializeField] protected List<SpawnArea> spawnAreas;
+        public List<SpawnArea> Areas => spawnAreas;
 
         [SerializeField]
-        private Transform _agentsContainer;
-        private int _newAgentID = 0;
+        protected Transform _agentsContainer;
+        protected int _newAgentID = 0;
 
         public List<Cell> Cells
         {
@@ -91,13 +90,14 @@ namespace Biocrowds.Core
         }
 
         [SerializeField]
-        private MarkerSpawner _markerSpawner = null;
+        protected MarkerSpawner _markerSpawner = null;
 
 
         //max auxins on the ground
-        private bool _isReady;
+        protected bool _isReady;
+        public bool Ready => _isReady;
 
-        private void Awake()
+        protected void Awake()
         {
             _newAgentID = 0;
             if (spawnAreas.Count == 0)
@@ -132,15 +132,18 @@ namespace Biocrowds.Core
         }
 
         // Use this for initialization
-        IEnumerator SetupWorld()
+        protected virtual IEnumerator SetupWorld()
         {
             //Application.runInBackground = true;
 
             //change terrain size according informed
-            _terrain.terrainData.size = new Vector3(_dimension.x, _terrain.terrainData.size.y, _dimension.y);
-            _terrain.transform.position = new Vector3(_offset.x, _terrain.transform.position.y, _offset.y);
+            if (_terrainObject == null)
+                _terrainObject = _terrain.transform;
+            if(_terrain != null)
+                _terrain.terrainData.size = new Vector3(_dimension.x, _terrain.terrainData.size.y, _dimension.y);
+            _terrainObject.position = new Vector3(_offset.x, _terrainObject.position.y, _offset.y);
 
-            GameObjectUtility.SetStaticEditorFlags(_terrain.gameObject, StaticEditorFlags.NavigationStatic);
+            GameObjectUtility.SetStaticEditorFlags(_terrainObject.gameObject, StaticEditorFlags.NavigationStatic);
 
             //build the navmesh at runtime
             //NavMeshBuilder.BuildNavMesh();
@@ -162,10 +165,9 @@ namespace Biocrowds.Core
             //wait a little bit to start moving
             yield return new WaitForSeconds(1.0f);
             _isReady = true;
-            Debug.Break();
         }
 
-        private IEnumerator CreateCells()
+        protected virtual IEnumerator CreateCells()
         {
             Transform cellPool = new GameObject("Cells").transform;
             Vector3 _spawnPos = new Vector3();
@@ -196,7 +198,7 @@ namespace Biocrowds.Core
             }
         }
 
-        private IEnumerator DartThrowing()
+        protected virtual IEnumerator DartThrowing()
         {
             //lets set the qntAuxins for each cell according the density estimation
             float densityToQnt = AUXIN_DENSITY;
@@ -290,7 +292,7 @@ namespace Biocrowds.Core
             }
         }
 
-        private IEnumerator CreateAgents()
+        protected virtual IEnumerator CreateAgents()
         {
             _agentsContainer = new GameObject("Agents").transform;
           
@@ -306,8 +308,14 @@ namespace Biocrowds.Core
             }
         }
 
+        private void Update()
+        {
+            if (simulateOnUpdate)
+                Update(Time.deltaTime);
+        }
+
         // Update is called once per frame
-        void Update()
+        void Update(float deltaTime)
         {
             //TODO: Modificar de time-deltatime para fixed frame
             if (!_isReady)
@@ -315,7 +323,7 @@ namespace Biocrowds.Core
 
             foreach (SpawnArea _area in spawnAreas)
             {
-                _area.UpdateSpawnCounter(SIMULATION_TIME_STEP);
+                _area.UpdateSpawnCounter(deltaTime);
                 if (_area.CycleReady)
                 {
                     for (int i = 0; i < _area.quantitySpawnedEachCycle; i++)
@@ -381,9 +389,9 @@ namespace Biocrowds.Core
                 _agents[i].CalculateVelocity();
                 //step
                 if (!_agents[i].isWaiting)
-                    _agents[i].MovementStep(SIMULATION_TIME_STEP);
+                    _agents[i].MovementStep(deltaTime);
 
-                _agents[i].WaitStep(SIMULATION_TIME_STEP);
+                _agents[i].WaitStep(deltaTime);
                 //if (_agents[i].IsAtCurrentGoal() && !_agents[i].isWaiting)
 
 
@@ -400,12 +408,12 @@ namespace Biocrowds.Core
 
             // Update de Navmesh for each agent 
             for (int i = 0; i < _agents.Count; i++)
-                _agents[i].NavmeshStep(SIMULATION_TIME_STEP);
+                _agents[i].NavmeshStep(deltaTime);
 
             
         }
 
-        private Cell GetClosestCellToPoint (Vector3 point)
+        protected Cell GetClosestCellToPoint (Vector3 point)
         {
             float _minDist = Vector3.Distance(point, _cells[0].transform.position);
             int _minIndex = 0;
@@ -421,7 +429,7 @@ namespace Biocrowds.Core
             return _cells[_minIndex];
         }
 
-        private void SpawnNewAgent(Vector3 _pos, bool _removeWhenGoalReached, 
+        protected void SpawnNewAgent(Vector3 _pos, bool _removeWhenGoalReached, 
             List<GameObject> _goalList)
         {
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)],
@@ -436,7 +444,7 @@ namespace Biocrowds.Core
             _agents.Add(newAgent);
         }
 
-        private void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
+        protected void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
         {
             Vector3 _pos = _area.GetRandomPoint();
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)], 
@@ -463,7 +471,7 @@ namespace Biocrowds.Core
             _agents.Add(newAgent);
         }
 
-        private int GetNewAgentID()
+        protected int GetNewAgentID()
         {
             _newAgentID++;
             return _newAgentID - 1;
