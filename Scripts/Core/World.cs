@@ -123,6 +123,12 @@ namespace Biocrowds.Core
             }
         }
 
+        internal void SetDimensionAndOffset(Vector2 dimension, Vector2 offset)
+        {
+            this._dimension = dimension;
+            this._offset = offset;
+        }
+
         public void LoadWorld()
         {
             var markerSpawnerMethods = transform.GetComponentsInChildren<MarkerSpawner>();
@@ -137,11 +143,11 @@ namespace Biocrowds.Core
             //Application.runInBackground = true;
 
             //change terrain size according informed
-            if (_terrainObject == null)
-                _terrainObject = _terrain.transform;
-            if(_terrain != null)
-                _terrain.terrainData.size = new Vector3(_dimension.x, _terrain.terrainData.size.y, _dimension.y);
-            _terrainObject.position = new Vector3(_offset.x, _terrainObject.position.y, _offset.y);
+            //if (_terrainObject == null)
+            //    _terrainObject = _terrain.transform;
+            //if(_terrain != null)
+            //    _terrain.terrainData.size = new Vector3(_dimension.x, _terrain.terrainData.size.y, _dimension.y);
+            //_terrainObject.position = new Vector3(_offset.x, _terrainObject.position.y, _offset.y);
 
             GameObjectUtility.SetStaticEditorFlags(_terrainObject.gameObject, StaticEditorFlags.NavigationStatic);
 
