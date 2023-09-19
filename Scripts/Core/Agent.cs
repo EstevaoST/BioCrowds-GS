@@ -95,8 +95,8 @@ namespace Biocrowds.Core
             _dirAgentGoal = _goalPosition - transform.position;
             if (_visualAgent != null) _visualAgent.Initialize(transform.position, this);
             //cache world info
-            _totalX = Mathf.FloorToInt(_world.Dimension.x / 2.0f) - 1;
-            _totalZ = Mathf.FloorToInt(_world.Dimension.y / 2.0f);
+            _totalX = Mathf.CeilToInt(_world.Dimension.x / 2.0f) - 1;
+            _totalZ = Mathf.CeilToInt(_world.Dimension.y / 2.0f);
         }
 
         public void NavmeshStep(float _timeStep)
@@ -349,32 +349,35 @@ namespace Biocrowds.Core
             //[ ][ ][ ]
             //[ ][X][ ]
             //[ ][ ][ ]
+            if (_currentCell.X > 0 && _currentCell.Z > 0)
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X - 1, _currentCell.Z - 1);
+
             if (_currentCell.X > 0)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X - 1) * _totalZ + (_currentCell.Z + 0)]);
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X - 1, _currentCell.Z + 0);
 
             if (_currentCell.X > 0 && _currentCell.Z < _totalZ - 1)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X - 1) * _totalZ + (_currentCell.Z + 1)]);
-
-            if (_currentCell.X > 0 && _currentCell.Z > 0)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X - 1) * _totalZ + (_currentCell.Z - 1)]);
-
-            if (_currentCell.Z < _totalZ - 1)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X + 0) * _totalZ + (_currentCell.Z + 1)]);
-
-            if (_currentCell.X < _totalX && _currentCell.Z < _totalZ - 1)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X + 1) * _totalZ + (_currentCell.Z + 1)]);
-
-            if (_currentCell.X < _totalX)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X + 1) * _totalZ + (_currentCell.Z + 0)]);
-
-            if (_currentCell.X < _totalX && _currentCell.Z > 0)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X + 1) * _totalZ + (_currentCell.Z - 1)]);
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X - 1, _currentCell.Z + 1);
 
             if (_currentCell.Z > 0)
-                CheckAuxins(ref distanceToCellSqr, _world.Cells[(_currentCell.X + 0) * _totalZ + (_currentCell.Z - 1)]);
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 0, _currentCell.Z - 1);
 
+            if (_currentCell.Z < _totalZ - 1)
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 0, _currentCell.Z + 1);
+
+            if (_currentCell.X < _totalX && _currentCell.Z > 0)
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 1, _currentCell.Z - 1);
+
+            if (_currentCell.X < _totalX)
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 1, _currentCell.Z + 0);
+
+            if (_currentCell.X < _totalX && _currentCell.Z < _totalZ - 1)
+                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 1, _currentCell.Z + 1);                        
         }
 
+        private void CheckAuxins(ref float pDistToCellSqr, int x, int z)
+        {
+            CheckAuxins(ref pDistToCellSqr, _world.Cells[x * _totalZ + z]);
+        }
         private void CheckAuxins(ref float pDistToCellSqr, Cell pCell)
         {
             //get all auxins on neighbourcell

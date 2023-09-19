@@ -123,7 +123,7 @@ namespace Biocrowds.Core
             }
         }
 
-        internal void SetDimensionAndOffset(Vector2 dimension, Vector2 offset)
+        public void SetDimensionAndOffset(Vector2 dimension, Vector2 offset)
         {
             this._dimension = dimension;
             this._offset = offset;
