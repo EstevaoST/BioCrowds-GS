@@ -68,6 +68,7 @@ namespace Biocrowds.Core
 
         [SerializeField]
         protected List<Agent> _agents = new List<Agent>();
+        protected List<Agent> _finishedAgents = new List<Agent>();
         public List<Agent> Agents => _agents;
         List<Cell> _cells = new List<Cell>();
         List<Auxin> _auxins = new List<Auxin>();
@@ -408,7 +409,8 @@ namespace Biocrowds.Core
             foreach(Agent a in _agentsToRemove)
             {
                 _agents.Remove(a);
-                Destroy(a.gameObject);
+                _finishedAgents.Add(a);
+                a.gameObject.SetActive(false);
             }
             _agentsToRemove.Clear();
 
@@ -472,6 +474,8 @@ namespace Biocrowds.Core
                 newAgent.goalsList = _area.repeatingGoalList;
                 newAgent.removeWhenGoalReached = _area.repeatingRemoveWhenGoalReached;
                 newAgent.goalsWaitList = _area.repeatingWaitList;
+                if(_area.limitRepeatingSpawn)
+                    _area.quantityLimitToSpawn--;
             }
             newAgent.World = this;
             _agents.Add(newAgent);

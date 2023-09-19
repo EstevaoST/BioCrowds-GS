@@ -14,7 +14,9 @@ public class SpawnArea : MonoBehaviour
     public List<float> initialWaitList;
 
     [Header("Repeating Spawner Settings")]
-    public float cycleLenght = 1.0f;
+    public bool limitRepeatingSpawn = false;
+    public int quantityLimitToSpawn = 1;
+    public float cycleLenght = 1.0f;    
     public int quantitySpawnedEachCycle;
     public bool repeatingRemoveWhenGoalReached;
     public List<GameObject> repeatingGoalList;
@@ -24,6 +26,7 @@ public class SpawnArea : MonoBehaviour
 
 
     public bool CycleReady { get => cycleReady;  }
+    public bool Finished => limitRepeatingSpawn && quantityLimitToSpawn <= 0;
 
     private void Awake()
     {
@@ -45,7 +48,7 @@ public class SpawnArea : MonoBehaviour
 
     public void UpdateSpawnCounter(float dt)
     {
-        if (cycleLenght == 0.0f || quantitySpawnedEachCycle == 0)
+        if (cycleLenght == 0.0f || quantitySpawnedEachCycle == 0 || (limitRepeatingSpawn && quantityLimitToSpawn == 0))
             return;
 
         cycleCounter += dt;
