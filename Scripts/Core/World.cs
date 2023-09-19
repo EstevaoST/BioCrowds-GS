@@ -67,9 +67,8 @@ namespace Biocrowds.Core
 
 
         [SerializeField]
-        protected List<Agent> _agents = new List<Agent>();
-        protected List<Agent> _finishedAgents = new List<Agent>();
-        public List<Agent> Agents => _agents;
+        public List<Agent> _agents = new List<Agent>();
+        public List<Agent> _finishedAgents = new List<Agent>();
         List<Cell> _cells = new List<Cell>();
         List<Auxin> _auxins = new List<Auxin>();
 
@@ -97,6 +96,14 @@ namespace Biocrowds.Core
         //max auxins on the ground
         protected bool _isReady;
         public bool Ready => _isReady;
+
+        protected bool _isFinished;
+        public bool Finished => _isFinished;
+        public System.Action OnSimulationFinished = null;
+        public System.Action<Agent> OnAgentFinished = null;
+
+        protected float _simulationTime;
+        public float SimulationTime => _simulationTime;
 
         protected void Awake()
         {
@@ -170,8 +177,10 @@ namespace Biocrowds.Core
             yield return StartCoroutine(CreateAgents());
 
             //wait a little bit to start moving
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(0.1f);
             _isReady = true;
+            _isFinished = false;
+            _simulationTime = 0;
         }
 
         protected virtual IEnumerator CreateCells()
@@ -322,11 +331,14 @@ namespace Biocrowds.Core
         }
 
         // Update is called once per frame
-        void Update(float deltaTime)
+        public void Update(float deltaTime)
         {
             //TODO: Modificar de time-deltatime para fixed frame
-            if (!_isReady)
+            if (!_isReady || _isFinished)
                 return;
+
+            // Update simulation time
+            _simulationTime += deltaTime;
 
             foreach (SpawnArea _area in spawnAreas)
             {
@@ -411,14 +423,18 @@ namespace Biocrowds.Core
                 _agents.Remove(a);
                 _finishedAgents.Add(a);
                 a.gameObject.SetActive(false);
+                OnAgentFinished?.Invoke(a);
             }
             _agentsToRemove.Clear();
 
             // Update de Navmesh for each agent 
             for (int i = 0; i < _agents.Count; i++)
-                _agents[i].NavmeshStep(deltaTime);
+                _agents[i].NavmeshStep(deltaTime);            
 
-            
+            // check if finished
+            _isFinished = _agents.Count == 0 && spawnAreas.All(x => x.Finished);
+            if (_isFinished)
+                OnSimulationFinished?.Invoke();
         }
 
         protected Cell GetClosestCellToPoint (Vector3 point)
