@@ -494,6 +494,8 @@ namespace Biocrowds.Core
                     _area.quantityLimitToSpawn--;
             }
             newAgent.World = this;
+            newAgent.Initialize();
+
             _agents.Add(newAgent);
         }
 

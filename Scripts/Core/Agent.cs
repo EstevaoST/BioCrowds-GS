@@ -67,7 +67,7 @@ namespace Biocrowds.Core
         private int _totalX;
         private int _totalZ;
 
-        private NavMeshPath _navMeshPath;
+        private NavMeshPath _navMeshPath = null;
 
         public VisualAgent _visualAgent;
 
@@ -85,14 +85,22 @@ namespace Biocrowds.Core
 
         public int auxinCount;
 
-        void Start()
+        private void Start()
+        {
+            if(_navMeshPath == null) // is not initialized
+                Initialize();
+        }
+        public void Initialize()
         {
             _navMeshPath = new NavMeshPath();
             if (_visualAgent == null) _visualAgent = GetComponentInChildren<VisualAgent>();
-           
 
-            _goalPosition = Goal.transform.position;
-            _dirAgentGoal = _goalPosition - transform.position;
+
+            if (Goal != null)
+            {
+                _goalPosition = Goal.transform.position;
+                _dirAgentGoal = _goalPosition - transform.position;
+            }
             if (_visualAgent != null) _visualAgent.Initialize(transform.position, this);
             //cache world info
             _totalX = Mathf.CeilToInt(_world.Dimension.x / 2.0f) - 1;
@@ -140,7 +148,7 @@ namespace Biocrowds.Core
 
         private void UpdateGoalPositionAndNavmesh()
         {
-            if (goalIndex >= goalsList.Count)
+            if (goalsList == null || goalIndex < 0 || goalIndex >= goalsList.Count)
                 return;
 
             _elapsedTime = 0.0f;
