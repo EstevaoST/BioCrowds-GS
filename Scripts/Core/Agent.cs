@@ -9,7 +9,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.AI;
-using System.Linq;
 
 namespace Biocrowds.Core
 {
@@ -156,11 +155,12 @@ namespace Biocrowds.Core
 
             //calculate agent path
             //bool foundPath = NavMesh.CalculatePath(transform.position, Goal.transform.position, NavMesh.AllAreas, _navMeshPath);
-            bool foundPath = NavMesh.CalculatePath(transform.position, GetCurrentGoalPos(), NavMesh.AllAreas, _navMeshPath);
+            bool foundPath = NavMesh.CalculatePath(transform.position, goalsList[goalIndex].transform.position,
+                NavMesh.AllAreas, _navMeshPath);
             //update its goal if path is found
             if (foundPath)
             {
-                _goalPosition = new Vector3(_navMeshPath.corners[1].x, transform.position.y, _navMeshPath.corners[1].z);
+                _goalPosition = new Vector3(_navMeshPath.corners[1].x, 0f, _navMeshPath.corners[1].z);
                 _dirAgentGoal = _goalPosition - transform.position;
             }
             else
@@ -311,22 +311,6 @@ namespace Biocrowds.Core
             }
         }
 
-        private Vector3 GetCurrentGoalPos()
-        {
-            if (goalsList == null || goalIndex < 0 || goalIndex >= goalsList.Count)
-                return transform.position;
-
-            GameObject g = goalsList[goalIndex];
-            Vector3 pos = g.transform.position;
-            
-            Collider c = g.GetComponent<Collider>();
-            if(c!= null)
-            {
-                pos = c.ClosestPoint(transform.position);
-            }
-            return pos;
-        }
-
         //find all auxins near him (Voronoi Diagram)
         //call this method from game controller, to make it sequential for each agent
         public void FindNearAuxins()
@@ -453,12 +437,6 @@ namespace Biocrowds.Core
             Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
             Vector2 goalPos = new Vector2(goalsList[goalsList.Count - 1].transform.position.x,
                 goalsList[goalsList.Count - 1].transform.position.z);
-            
-            if (_navMeshPath.status == NavMeshPathStatus.PathComplete)
-                goalPos = new Vector2(_navMeshPath.corners.Last().x, _navMeshPath.corners.Last().z);
-            else 
-                goalPos = new Vector2(goalsList[goalsList.Count - 1].transform.position.x, goalsList[goalsList.Count - 1].transform.position.z);
-
             return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
         }
     }

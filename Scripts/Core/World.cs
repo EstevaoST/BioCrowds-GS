@@ -8,7 +8,6 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using UnityEditor.AI;
 using System.Collections;
 using UnityEngine.AI;
 using System.Linq;
@@ -40,6 +39,7 @@ namespace Biocrowds.Core
 
         [SerializeField] protected Terrain _terrain;
         [SerializeField] protected Transform _terrainObject;
+        [SerializeField] protected NavMeshSurface _navmeshObject;
 
         [SerializeField]
         protected Vector2 _dimension = new Vector2(30.0f, 20.0f);
@@ -157,12 +157,12 @@ namespace Biocrowds.Core
             //    _terrain.terrainData.size = new Vector3(_dimension.x, _terrain.terrainData.size.y, _dimension.y);
             //_terrainObject.position = new Vector3(_offset.x, _terrainObject.position.y, _offset.y);
 
-            GameObjectUtility.SetStaticEditorFlags(_terrainObject.gameObject, StaticEditorFlags.NavigationStatic);
+            //GameObjectUtility.SetStaticEditorFlags(_terrainObject.gameObject, StaticEditorFlags.NavigationStatic);
 
             //build the navmesh at runtime
             //NavMeshBuilder.BuildNavMesh();
-            UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
-
+            //UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
+            _navmeshObject.BuildNavMesh();
 
             //create all cells based on dimension
             yield return StartCoroutine(CreateCells());
