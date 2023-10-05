@@ -471,6 +471,16 @@ namespace Biocrowds.Core
         protected void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
         {
             Vector3 _pos = _area.GetRandomPoint();
+            Cell c = GetClosestCellToPoint(_pos);
+            while(c.Auxins.Count == 0)
+            {
+                _pos = _area.GetRandomPoint();
+                c = GetClosestCellToPoint(_pos);
+            }
+            _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
+                
+
+
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)], 
                 _pos, Quaternion.identity, _agentsContainer);
             newAgent.name = "Agent [" + GetNewAgentID() + "]";  //name
