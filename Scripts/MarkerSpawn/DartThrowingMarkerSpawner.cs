@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class DartThrowingMarkerSpawner : MarkerSpawner
 {
+    public int maxThrowingRetries = 500;
+
     public override IEnumerator CreateMarkers(List<Cell> cells, List<Auxin> auxins)
     {
         _auxinsContainer = new GameObject("Markers").transform;
@@ -26,27 +28,16 @@ public class DartThrowingMarkerSpawner : MarkerSpawner
         float cellHalfSize = (_cellSize / 2.0f) * (1.0f - (MarkerRadius/2f));
 
         // Set this counter to break the loop if it is taking too long (maybe there is no more space)
-        int _tries = 0;
+        int oldseed = Random.seed;
 
         for (int i = 0; i < _maxMarkersPerCell; i++)
-        {
-            // If counter is above maxMarkers * 5, breaks the sequence for this Cell
-            if (_tries > _maxMarkersPerCell * 5)
-                break;
+        {           
+            // Search position for new Marker
+            Vector3 targetPosition;
 
-            // Candidate position for new Marker
-            float x = Random.Range(-cellHalfSize, cellHalfSize);
-            float z = Random.Range(-cellHalfSize, cellHalfSize);
-            Vector3 targetPosition = new Vector3(x, 0f, z) + cell.transform.position;
+            if (!GetRandomPositionInCell(cell, out targetPosition, cellHalfSize))
+                continue;            
 
-            if (HasObstacleNearby(targetPosition) || HasMarkersNearby(targetPosition, cell.Auxins) 
-                || !IsOnNavmesh(targetPosition))
-            {
-                _tries++;
-                i--;
-                continue;
-            }
-           
             // Creates new Marker and sets its data
             Auxin newMarker = Instantiate(auxinPrefab, targetPosition, Quaternion.identity, _auxinsContainer);
             newMarker.transform.localScale = Vector3.one * MarkerRadius;
@@ -57,11 +48,39 @@ public class DartThrowingMarkerSpawner : MarkerSpawner
 
             auxins.Add(newMarker);
             cell.Auxins.Add(newMarker);
-
-            // Reset the tries counter
-            _tries = 0;
         }
+        Random.InitState(oldseed);
         yield break;
+    }
+
+    private bool GetRandomPositionInCell(Cell cell, out Vector3 position, float? cellHalfSize = null)
+    {
+        float chs = cellHalfSize ?? (_cellSize / 2.0f) * (1.0f - (MarkerRadius / 2f));
+
+        // Search position for new Marker
+        float x = Random.Range(-chs, chs);
+        float z = Random.Range(-chs, chs);
+        position = new Vector3(x, 0f, z) + cell.transform.position;
+        bool found = ValidPositionInCell(cell, position);
+
+        float _tries = 0;
+        while (!found && _tries < maxThrowingRetries)
+        {
+            x = Random.Range(-chs, chs);
+            z = Random.Range(-chs, chs);
+            position = new Vector3(x, 0f, z) + cell.transform.position;
+            found = ValidPositionInCell(cell, position);
+            _tries++;
+        }       
+
+        return found;
+    }
+
+    private bool ValidPositionInCell(Cell cell, Vector3 position)
+    {
+        return !HasObstacleNearby(position) &&
+               !HasMarkersNearby(position, cell.Auxins) &&
+               IsOnNavmesh(position);
     }
 
 }

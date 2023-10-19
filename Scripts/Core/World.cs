@@ -470,13 +470,20 @@ namespace Biocrowds.Core
 
         protected void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
         {
+            // Get a random point to a random cell
             Vector3 _pos = _area.GetRandomPoint();
             Cell c = GetClosestCellToPoint(_pos);
+
+            int oldSeed = Random.seed;
             while(c.Auxins.Count == 0)
             {
+                // while cell is not traversable, randomize another cell
                 _pos = _area.GetRandomPoint();
                 c = GetClosestCellToPoint(_pos);
             }
+            // return seed to oldstate to not disrturb random sequentiation
+            Random.InitState(oldSeed); 
+
             _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
                 
 
