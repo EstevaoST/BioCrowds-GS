@@ -50,6 +50,7 @@ public class DartThrowingMarkerSpawner : MarkerSpawner
             cell.Auxins.Add(newMarker);
         }
         Random.InitState(oldseed);
+        Random.Range(0, 1);
         yield break;
     }
 

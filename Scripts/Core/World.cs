@@ -482,7 +482,8 @@ namespace Biocrowds.Core
                 c = GetClosestCellToPoint(_pos);
             }
             // return seed to oldstate to not disrturb random sequentiation
-            Random.InitState(oldSeed); 
+            Random.InitState(oldSeed);
+            Random.Range(0, 1);
 
             _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
                 
