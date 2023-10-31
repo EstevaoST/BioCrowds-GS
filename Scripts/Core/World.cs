@@ -332,8 +332,7 @@ namespace Biocrowds.Core
 
         // Update is called once per frame
         public void Update(float deltaTime)
-        {
-            //TODO: Modificar de time-deltatime para fixed frame
+        {            
             if (!_isReady || _isFinished)
                 return;
 
@@ -384,7 +383,6 @@ namespace Biocrowds.Core
             */
 
             List<Agent> _agentsToRemove = new List<Agent>();
-            bool _showAgentAuxingVector = SceneController.ShowAuxinVectors;
             //for (int i = 0; i < _maxAgents; i++)
             for (int i = 0; i < _agents.Count; i++)
             {
@@ -396,10 +394,6 @@ namespace Biocrowds.Core
                 {
                     //add the distance vector between it and the agent
                     _agents[i]._distAuxin.Add(agentAuxins[j].Position - _agents[i].transform.position);
-
-                    //just draw the lines to each auxin
-                    if (_showAgentAuxingVector)
-                        Debug.DrawLine(agentAuxins[j].Position, _agents[i].transform.position, Color.green);
                 }
 
                 //calculate the movement vector
@@ -475,15 +469,25 @@ namespace Biocrowds.Core
             Cell c = GetClosestCellToPoint(_pos);
 
             int oldSeed = Random.seed;
-            while(c.Auxins.Count == 0)
+            int tries = 0;
+            bool found = c.Auxins.Count > 0;
+            while (!found && tries < 5)
             {
                 // while cell is not traversable, randomize another cell
                 _pos = _area.GetRandomPoint();
                 c = GetClosestCellToPoint(_pos);
+                tries++;
+                found = c.Auxins.Count > 0;
             }
             // return seed to oldstate to not disrturb random sequentiation
             Random.InitState(oldSeed);
             Random.Range(0, 1);
+
+            if (!found)
+            {
+                Debug.LogError("Could not find cells with auxins to spawn agent");
+                return;
+            }
 
             _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
                 

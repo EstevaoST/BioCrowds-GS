@@ -9,6 +9,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.AI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Biocrowds.Core
 {
@@ -119,14 +122,46 @@ namespace Biocrowds.Core
             {
                 UpdateGoalPositionAndNavmesh();
             }
+        }
 
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            if (Selection.Contains(gameObject))
+                return;
+
+            //draw line to goal           
+            if (_navMeshPath != null && SceneController.ShowNavMeshCorners)
+            {
+                for (int i = 0; i < _navMeshPath.corners.Length - 1; i++)
+                    Debug.DrawLine(_navMeshPath.corners[i], _navMeshPath.corners[i + 1], Color.gray);
+            }
+
+            //just draw the lines to each auxin
+            if (SceneController.ShowAuxinVectors)
+            {
+                for (int i = 0; i < Auxins.Count; i++)
+                    Debug.DrawLine(Auxins[i].Position, transform.position, Color.cyan);
+            }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
             //draw line to goal
             if (_navMeshPath != null && SceneController.ShowNavMeshCorners)
             {
                 for (int i = 0; i < _navMeshPath.corners.Length - 1; i++)
                     Debug.DrawLine(_navMeshPath.corners[i], _navMeshPath.corners[i + 1], Color.red);
             }
+
+            //just draw the lines to each auxin
+            if (SceneController.ShowAuxinVectors)
+            {
+                for (int i = 0; i < Auxins.Count; i++)
+                    Debug.DrawLine(Auxins[i].Position, transform.position, Color.green);
+            }
         }
+#endif
 
         /*void Update()
         {
