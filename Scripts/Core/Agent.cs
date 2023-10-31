@@ -179,7 +179,15 @@ namespace Biocrowds.Core
             //update its goal if path is found
             if (foundPath)
             {
-                _goalPosition = new Vector3(_navMeshPath.corners[1].x, 0f, _navMeshPath.corners[1].z);
+                int pIndex = 1;
+                _goalPosition = new Vector3(_navMeshPath.corners[pIndex].x, 0f, _navMeshPath.corners[pIndex].z);                
+                while(pIndex < _navMeshPath.corners.Length - 1 && Vector3.Distance(transform.position, _goalPosition) < goalDistThreshold)
+                {
+                    // while the next position of the path is near enough, advance on it 
+                    pIndex++;
+                    _goalPosition = new Vector3(_navMeshPath.corners[pIndex].x, 0f, _navMeshPath.corners[pIndex].z);
+                }
+
                 _dirAgentGoal = _goalPosition - transform.position;
             }
             else
@@ -209,7 +217,13 @@ namespace Biocrowds.Core
         public void MovementStep(float _timeStep)
         {
             if (_velocity.sqrMagnitude > 0.0f)
-                transform.Translate(_velocity * _timeStep, Space.World);
+            {
+                Vector3 movement = _velocity * _timeStep;
+                Vector3 goalDist = goalsList[goalIndex].transform.position - transform.position;
+                movement = Vector3.ClampMagnitude(movement, goalDist.magnitude);
+
+                transform.Translate(movement, Space.World);
+            }
         }
 
         public void WaitStep(float _timeStep)
