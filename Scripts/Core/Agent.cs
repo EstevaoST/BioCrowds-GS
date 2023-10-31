@@ -127,38 +127,22 @@ namespace Biocrowds.Core
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            if (Selection.Contains(gameObject))
-                return;
+            bool selected = Selection.Contains(gameObject);
 
             //draw line to goal           
             if (_navMeshPath != null && SceneController.ShowNavMeshCorners)
             {
                 for (int i = 0; i < _navMeshPath.corners.Length - 1; i++)
-                    Debug.DrawLine(_navMeshPath.corners[i], _navMeshPath.corners[i + 1], Color.gray);
+                    Debug.DrawLine(_navMeshPath.corners[i], _navMeshPath.corners[i + 1], 
+                                   selected ? Color.red : Color.gray);
             }
 
             //just draw the lines to each auxin
             if (SceneController.ShowAuxinVectors)
             {
                 for (int i = 0; i < Auxins.Count; i++)
-                    Debug.DrawLine(Auxins[i].Position, transform.position, Color.cyan);
-            }
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            //draw line to goal
-            if (_navMeshPath != null && SceneController.ShowNavMeshCorners)
-            {
-                for (int i = 0; i < _navMeshPath.corners.Length - 1; i++)
-                    Debug.DrawLine(_navMeshPath.corners[i], _navMeshPath.corners[i + 1], Color.red);
-            }
-
-            //just draw the lines to each auxin
-            if (SceneController.ShowAuxinVectors)
-            {
-                for (int i = 0; i < Auxins.Count; i++)
-                    Debug.DrawLine(Auxins[i].Position, transform.position, Color.green);
+                    Debug.DrawLine(Auxins[i].Position, transform.position, 
+                                   selected ? Color.green : Color.white);
             }
         }
 #endif
