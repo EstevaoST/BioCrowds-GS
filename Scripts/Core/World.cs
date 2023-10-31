@@ -471,7 +471,7 @@ namespace Biocrowds.Core
             int oldSeed = Random.seed;
             int tries = 0;
             bool found = c.Auxins.Count > 0;
-            while (!found && tries < 5)
+            while (!found && tries < 500)
             {
                 // while cell is not traversable, randomize another cell
                 _pos = _area.GetRandomPoint();
