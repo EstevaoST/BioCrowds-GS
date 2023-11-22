@@ -17,7 +17,7 @@ public abstract class MarkerSpawner : MonoBehaviour
     protected Transform _auxinsContainer;
 
     protected float _cellSize;
-    protected int _maxMarkersPerCell;
+    public int _maxMarkersPerCell;
 
     public Auxin auxinPrefab;
 

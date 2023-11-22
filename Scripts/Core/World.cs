@@ -105,6 +105,8 @@ namespace Biocrowds.Core
         protected float _simulationTime;
         public float SimulationTime => _simulationTime;
 
+        public MarkerSpawner MarkerSpawner => _markerSpawner;
+
         protected void Awake()
         {
             _newAgentID = 0;
