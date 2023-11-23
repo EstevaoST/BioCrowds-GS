@@ -6,6 +6,7 @@ using UnityEngine.AI;
 
 public class RegularGridMarkerSpawner : MarkerSpawner
 {
+    public float randomIntensity = 0.05f;
     public override IEnumerator CreateMarkers(List<Cell> cells, List<Auxin> auxins)
     {
         _auxinsContainer = new GameObject("Markers").transform;
@@ -26,15 +27,25 @@ public class RegularGridMarkerSpawner : MarkerSpawner
         var floatCorrection = MarkerRadius / 4f;
         int count = 0;
 
-        for (float _x = bounds.min.x; _x <= bounds.max.x + floatCorrection; _x += MarkerRadius)
+        float stepx = Mathf.Lerp(cell.transform.localScale.x * 0.5f, MarkerRadius, MarkerDensity);
+        float stepz = Mathf.Lerp(cell.transform.localScale.y * 0.5f, MarkerRadius, MarkerDensity);
+
+        for (float _x = bounds.min.x; _x <= bounds.max.x + floatCorrection; _x += stepx)
         {
-            for (float _z = bounds.min.z; _z <= bounds.max.z + floatCorrection; _z += MarkerRadius)
+            for (float _z = bounds.min.z; _z <= bounds.max.z + floatCorrection; _z += stepz)
             {
                 Vector3 targetPosition = new Vector3(_x, 0f, _z);
 
                 if (HasObstacleNearby(targetPosition) || !IsOnNavmesh(targetPosition))
                     continue;
                 
+                if(randomIntensity > 0)
+                {
+                    float rDir = Random.Range(0, 360);
+                    Vector3 rOffset = Quaternion.Euler(0, rDir, 0) * Vector3.forward * Random.Range(0, randomIntensity);
+                    targetPosition += rOffset;
+                }
+
                 // Creates new Marker and sets its data
                 Auxin newMarker = Instantiate(auxinPrefab, targetPosition, Quaternion.identity, _auxinsContainer);
                 newMarker.transform.localScale = Vector3.one * MarkerRadius;
