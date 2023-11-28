@@ -467,10 +467,16 @@ namespace Biocrowds.Core
         public bool IsAtFinalGoal()
         {
             //Debug.Log(name + " : " + Vector3.Distance(transform.position, goalsList[goalsList.Count - 1].transform.position));
-            Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
-            Vector2 goalPos = new Vector2(goalsList[goalsList.Count - 1].transform.position.x,
-                goalsList[goalsList.Count - 1].transform.position.z);
-            return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
+            Collider goalCol = goalsList[goalsList.Count - 1].GetComponent<Collider>();
+            if (goalCol != null)
+                return goalCol.bounds.Contains(transform.position);
+            else
+            {
+                Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
+                Vector2 goalPos = new Vector2(goalsList[goalsList.Count - 1].transform.position.x,
+                                              goalsList[goalsList.Count - 1].transform.position.z);
+                return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
+            }
         }
     }
 }
