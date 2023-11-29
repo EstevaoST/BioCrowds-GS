@@ -37,8 +37,18 @@ public abstract class MarkerSpawner : MonoBehaviour
         return hitColliders.Length > 0 ? true : false;
     }
 
-    protected bool IsOnNavmesh(Vector3 test)
+    protected bool IsOnNavmesh(Vector3 test, out Vector3 position, float snap = 0.05f)
     {
-        return NavMesh.SamplePosition(test, out NavMeshHit hit, 0.05f, 1 << NavMesh.GetAreaFromName("Walkable"));
+        if(NavMesh.SamplePosition(test, out NavMeshHit hit, snap, 1 << NavMesh.GetAreaFromName("Walkable")))
+        {
+            position = hit.position;
+            return true;
+        }
+        position = Vector3.zero;
+        return false;
+    }
+    protected bool IsOnNavmesh(Vector3 test, float snap = 0.05f)
+    {
+        return IsOnNavmesh(test, out Vector3 v, snap);
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine.AI;
 
 public class RegularGridMarkerSpawner : MarkerSpawner
 {
+    public float snapToNavmesh = 0.05f;
     public float randomIntensity = 0.05f;
     public override IEnumerator CreateMarkers(List<Cell> cells, List<Auxin> auxins)
     {
@@ -36,7 +37,7 @@ public class RegularGridMarkerSpawner : MarkerSpawner
             {
                 Vector3 targetPosition = new Vector3(_x, 0f, _z);
 
-                if (HasObstacleNearby(targetPosition) || !IsOnNavmesh(targetPosition))
+                if (HasObstacleNearby(targetPosition) || !IsOnNavmesh(targetPosition, out targetPosition, snapToNavmesh))
                     continue;
                 
                 if(randomIntensity > 0)
