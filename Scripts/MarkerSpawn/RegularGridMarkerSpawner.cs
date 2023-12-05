@@ -30,7 +30,8 @@ public class RegularGridMarkerSpawner : MarkerSpawner
 
         float stepx = Mathf.Lerp(cell.transform.localScale.x * 0.5f, MarkerRadius, MarkerDensity);
         float stepz = Mathf.Lerp(cell.transform.localScale.y * 0.5f, MarkerRadius, MarkerDensity);
-
+        _maxMarkersPerCell = Mathf.FloorToInt((bounds.max.x + floatCorrection - bounds.min.x) / stepx) *
+                             Mathf.FloorToInt((bounds.max.z + floatCorrection - bounds.min.z) / stepz);
         for (float _x = bounds.min.x; _x <= bounds.max.x + floatCorrection; _x += stepx)
         {
             for (float _z = bounds.min.z; _z <= bounds.max.z + floatCorrection; _z += stepz)
