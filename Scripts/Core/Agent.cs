@@ -180,6 +180,8 @@ namespace Biocrowds.Core
             if (foundPath)
             {
                 int pIndex = 1;
+                if (pIndex >= _navMeshPath.corners.Length)
+                    pIndex = _navMeshPath.corners.Length - 1;
                 _goalPosition = new Vector3(_navMeshPath.corners[pIndex].x, 0f, _navMeshPath.corners[pIndex].z);                
                 while(pIndex < _navMeshPath.corners.Length - 1 && Vector3.Distance(transform.position, _goalPosition) < goalDistThreshold)
                 {
