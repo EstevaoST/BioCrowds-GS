@@ -14,6 +14,7 @@ namespace Biocrowds.Core
     {
         [SerializeField]
         private MeshRenderer _meshRenderer;
+        public Material[] densityMaterials = new Material[0];
 
         //is auxin taken?
         private bool _isTaken = false;
@@ -64,6 +65,11 @@ namespace Biocrowds.Core
         {
             get { return _cell; }
             set { _cell = value; }
+        }
+
+        private void Update()
+        {
+            _meshRenderer.sharedMaterial = densityMaterials[(int)Mathf.Clamp(AgentCountLast, 0, densityMaterials.Length-1)];
         }
 
         //Reset auxin to his default state, for each update
