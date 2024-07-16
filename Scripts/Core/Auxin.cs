@@ -52,6 +52,12 @@ namespace Biocrowds.Core
             set { _agent = value; }
         }
 
+        // How many agents are evaluating this auxin
+        public int AgentCount { get; set; }
+        
+        // How many agents had evaluating this auxin in the last frame
+        public int AgentCountLast { get; set; }
+
         //cell who has this auxin
         private Cell _cell;
         public Cell Cell
@@ -66,6 +72,8 @@ namespace Biocrowds.Core
             _minDistance = 2.0f;
             _agent = null;
             _isTaken = false;
+            AgentCountLast = AgentCount;
+            AgentCount = 0;
         }
 
         //public void OnDrawGizmos()

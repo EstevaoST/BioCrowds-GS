@@ -32,6 +32,9 @@ namespace Biocrowds.Core
         [SerializeField] public float AUXIN_DENSITY = 0.50f;
 
         [SerializeField] public float GOAL_DISTANCE_THRESHOLD = 1.0f;
+        [SerializeField] public int GOAL_DENSITY_EVASION = 3;
+
+
 
 
         [Header("Terrain Setting")]

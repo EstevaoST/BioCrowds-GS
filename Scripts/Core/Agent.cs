@@ -76,7 +76,7 @@ namespace Biocrowds.Core
 
         //time elapsed (to calculate path just between an interval of time)
         private float _elapsedTime;
-        //auxins distance vector from agent
+        // auxins list with relative distances to the agent
         public List<Vector3> _distAuxin;
 
         /*-----------Paravisis' model-----------*/
@@ -268,6 +268,8 @@ namespace Biocrowds.Core
         //distance of the auxin from the agent
         public void CalculateDirection()
         {
+            float densityReduction = 0;
+
             //for each agent´s auxin
             for (int k = 0; k < _distAuxin.Count; k++)
             {
@@ -276,9 +278,17 @@ namespace Biocrowds.Core
                 if (_denW < 0.0001f)
                     valorW = 0.0f;
 
+                // calculate density               
+                float valorD = 1 - (_auxins[k].AgentCountLast - 1) / (float)World.GOAL_DENSITY_EVASION;
+                valorD = Mathf.Pow(valorD, World.GOAL_DENSITY_EVASION);
+                valorD = Mathf.Clamp01(valorD);                
+
                 //sum the resulting vector * weight (Wk*Dk)
-                _rotation += valorW * _distAuxin[k] * _maxSpeed;
+                Vector3 rot = valorW  * _distAuxin[k] * _maxSpeed;
+                _rotation += rot * valorD;
+                densityReduction += rot.magnitude * (1-valorD);
             }
+            _rotation += _rotation.normalized * densityReduction;
         }
 
         //calculate W
@@ -358,25 +368,31 @@ namespace Biocrowds.Core
 
             //iterate all cell auxins to check distance between auxins and agent
             for (int i = 0; i < cellAuxins.Count; i++)
-            {
-                //see if the distance between this agent and this auxin is smaller than the actual value, and inside agent radius
+            {                
                 float distanceSqr = (transform.position - cellAuxins[i].Position).sqrMagnitude;
-                if (distanceSqr < cellAuxins[i].MinDistance && distanceSqr <= agentRadius * agentRadius)
+                if (distanceSqr <= agentRadius * agentRadius)
                 {
-                    //take the auxin!
-                    //if this auxin already was taken, need to remove it from the agent who had it
-                    if (cellAuxins[i].IsTaken)
-                        cellAuxins[i].Agent.Auxins.Remove(cellAuxins[i]);
+                    // Mark auxin as evaluated by this agent
+                    cellAuxins[i].AgentCount++;
 
-                    //auxin is taken
-                    cellAuxins[i].IsTaken = true;
+                    //see if the distance between this agent and this auxin is smaller than the actual value       
+                    if (distanceSqr < cellAuxins[i].MinDistance)
+                    {                        
+                        //take the auxin!
+                        //if this auxin already was taken, need to remove it from the agent who had it
+                        if (cellAuxins[i].IsTaken)
+                            cellAuxins[i].Agent.Auxins.Remove(cellAuxins[i]);
 
-                    //auxin has agent
-                    cellAuxins[i].Agent = this;
-                    //update min distance
-                    cellAuxins[i].MinDistance = distanceSqr;
-                    //update my auxins
-                    _auxins.Add(cellAuxins[i]);
+                        //auxin is taken
+                        cellAuxins[i].IsTaken = true;
+
+                        //auxin has agent
+                        cellAuxins[i].Agent = this;
+                        //update min distance
+                        cellAuxins[i].MinDistance = distanceSqr;
+                        //update my auxins
+                        _auxins.Add(cellAuxins[i]);
+                    }
                 }
             }
 
@@ -431,21 +447,27 @@ namespace Biocrowds.Core
             {
                 //see if the distance between this agent and this auxin is smaller than the actual value, and smaller than agent radius
                 float distanceSqr = (transform.position - cellAuxins[c].Position).sqrMagnitude;
-                if (distanceSqr < cellAuxins[c].MinDistance && distanceSqr <= agentRadius * agentRadius)
+                if (distanceSqr <= agentRadius * agentRadius)
                 {
-                    //take the auxin
-                    //if this auxin already was taken, need to remove it from the agent who had it
-                    if (cellAuxins[c].IsTaken)
-                        cellAuxins[c].Agent.Auxins.Remove(cellAuxins[c]);
+                    // Mark auxin as evaluated by this agent
+                    cellAuxins[c].AgentCount++;
 
-                    //auxin is taken
-                    cellAuxins[c].IsTaken = true;
-                    //auxin has agent
-                    cellAuxins[c].Agent = this;
-                    //update min distance
-                    cellAuxins[c].MinDistance = distanceSqr;
-                    //update my auxins
-                    _auxins.Add(cellAuxins[c]);
+                    if (distanceSqr < cellAuxins[c].MinDistance)
+                    {
+                        //take the auxin
+                        //if this auxin already was taken, need to remove it from the agent who had it
+                        if (cellAuxins[c].IsTaken)
+                            cellAuxins[c].Agent.Auxins.Remove(cellAuxins[c]);
+
+                        //auxin is taken
+                        cellAuxins[c].IsTaken = true;
+                        //auxin has agent
+                        cellAuxins[c].Agent = this;
+                        //update min distance
+                        cellAuxins[c].MinDistance = distanceSqr;
+                        //update my auxins
+                        _auxins.Add(cellAuxins[c]);
+                    }
                 }
             }
 
