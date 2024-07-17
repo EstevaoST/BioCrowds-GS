@@ -374,7 +374,10 @@ namespace Biocrowds.Core
                 _agents[i].FindNearAuxins();
 
             for (int i = 0; i < _agents.Count; i++)
+            {
                 _agents[i].auxinCount = _agents[i].Auxins.Count;
+                _agents[i].MarkAuxins();
+            }
             /*
              * to find where the agent must move, we need to get the vectors from the agent to each auxin he has, and compare with 
              * the vector from agent to goal, generating a angle which must lie between 0 (best case) and 180 (worst case)

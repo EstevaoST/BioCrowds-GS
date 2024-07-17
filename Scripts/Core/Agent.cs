@@ -9,6 +9,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.AI;
+using System.Linq;
+using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -372,9 +374,6 @@ namespace Biocrowds.Core
                 float distanceSqr = (transform.position - cellAuxins[i].Position).sqrMagnitude;
                 if (distanceSqr <= agentRadius * agentRadius)
                 {
-                    // Mark auxin as evaluated by this agent
-                    cellAuxins[i].AgentCount++;
-
                     //see if the distance between this agent and this auxin is smaller than the actual value       
                     if (distanceSqr < cellAuxins[i].MinDistance)
                     {                        
@@ -449,9 +448,6 @@ namespace Biocrowds.Core
                 float distanceSqr = (transform.position - cellAuxins[c].Position).sqrMagnitude;
                 if (distanceSqr <= agentRadius * agentRadius)
                 {
-                    // Mark auxin as evaluated by this agent
-                    cellAuxins[c].AgentCount++;
-
                     if (distanceSqr < cellAuxins[c].MinDistance)
                     {
                         //take the auxin
@@ -479,6 +475,38 @@ namespace Biocrowds.Core
                 _currentCell = pCell;
             }
         }
+
+
+        public void MarkAuxins()
+        {
+            if (_currentCell == null || _currentCell.Auxins == null || _currentCell.Auxins.Count == 0)
+                return;
+
+            Vector2[] cellsPos = new Vector2[]
+            {
+                Vector2.zero, 
+                Vector2.up   , Vector2.up    + Vector2.right, 
+                Vector2.right, Vector2.right + Vector2.down,
+                Vector2.down , Vector2.down  + Vector2.left,
+                Vector2.left , Vector2.left  + Vector2.up
+            };
+            Cell[] cells = cellsPos.Select (x => new Vector2(x.x + _currentCell.X, x.y + _currentCell.Z))
+                                   .Where  (x => x.x >= 0 && x.x < _totalX && x.y >= 0 && x.y < _totalZ)
+                                   .Select (x => _world.Cells[(int)x.x * _totalZ + (int)x.y])
+                                   .ToArray();
+
+            foreach (Auxin a in cells.SelectMany(x => x.Auxins))
+            {
+                float distanceSqr = (transform.position - a.Position).sqrMagnitude;
+                if (distanceSqr <= agentRadius * agentRadius)
+                {
+                    // Mark auxin as evaluated by this agent
+                    a.AgentCount++;
+                }
+            }
+        }
+
+
         public bool IsAtCurrentGoal()
         {
             //Debug.Log(name + " : " + Vector3.Distance(transform.position, _goalPosition));
