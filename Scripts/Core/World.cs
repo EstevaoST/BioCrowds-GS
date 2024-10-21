@@ -19,7 +19,9 @@ namespace Biocrowds.Core
         [Header("Simulation Configuration")]
         public SimulationConfiguration.MarkerSpawnMethod markerSpawnMethod;
 
-        [SerializeField] public bool simulateOnUpdate = true;        
+        [SerializeField] public bool simulateOnUpdate = true;
+        [SerializeField] public bool fastLoadingCells = false;
+        [SerializeField] public bool fastLoadingAgents = false;
 
         [SerializeField] public float MAX_AGENTS = 0;
         //agent radius
@@ -211,9 +213,11 @@ namespace Biocrowds.Core
 
                     _cells.Add(newCell);
 
-                    yield return null;
+                    if(!fastLoadingCells)
+                        yield return null;
                 }
             }
+            yield return null;
         }
 
         protected virtual IEnumerator DartThrowing()
@@ -321,9 +325,12 @@ namespace Biocrowds.Core
                 {
                     if (MAX_AGENTS == 0 || _agents.Count < MAX_AGENTS)
                         SpawnNewAgentInArea(_area, true);
-                    yield return null;
+
+                    if(!fastLoadingAgents)
+                        yield return null;
                 }
             }
+            yield return null;
         }
 
         private void Update()
