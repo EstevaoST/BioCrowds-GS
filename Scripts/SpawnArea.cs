@@ -67,11 +67,22 @@ public class SpawnArea : MonoBehaviour
 
     public Vector3 GetRandomPoint(float height = 0.0f)
     {
-        Vector3 point = new Vector3(
-            Random.Range(_collider.bounds.min.x, _collider.bounds.max.x), 
-            height,
-            Random.Range(_collider.bounds.min.z, _collider.bounds.max.z)
-        );
+        Vector3 point;
+        if (_collider.enabled)
+        {
+            point = new Vector3(
+                Random.Range(_collider.bounds.min.x, _collider.bounds.max.x),
+                height,
+                Random.Range(_collider.bounds.min.z, _collider.bounds.max.z)
+            );
+        }
+        else
+        {   
+            point = new Vector3(transform.position.x + 0.5f * Random.Range(-transform.lossyScale.x, transform.lossyScale.x),
+                                height,
+                                transform.position.z + 0.5f * Random.Range(-transform.lossyScale.z, transform.lossyScale.z)
+            ); ;
+        }
         
         return _collider.ClosestPoint(point);
     }
