@@ -27,6 +27,7 @@ public class SpawnArea : MonoBehaviour
 
     public bool CycleReady { get => cycleReady;  }
     public bool Finished => (limitRepeatingSpawn && quantityLimitToSpawn <= 0) || quantitySpawnedEachCycle == 0;
+    public Collider Collider => _collider;
 
     private void Awake()
     {

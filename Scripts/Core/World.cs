@@ -100,8 +100,10 @@ namespace Biocrowds.Core
         public bool Ready => _isReady;
 
         protected bool _isFinished;
-        public bool Finished => _isFinished;
+        public bool Finished => _isFinished;        
+        public System.Action OnAfterUpdate = null;
         public System.Action OnSimulationFinished = null;
+        public System.Action<SpawnArea, Agent> OnAgentSpawned = null;
         public System.Action<Agent> OnAgentFinished = null;
 
         protected float _simulationTime;
@@ -436,8 +438,11 @@ namespace Biocrowds.Core
 
             // check if finished
             _isFinished = _agents.Count == 0 && spawnAreas.All(x => x.Finished);
+
+            OnAfterUpdate?.Invoke();
+
             if (_isFinished)
-                OnSimulationFinished?.Invoke();
+                OnSimulationFinished?.Invoke();            
         }
 
         protected Cell GetClosestCellToPoint (Vector3 point)
@@ -528,6 +533,8 @@ namespace Biocrowds.Core
             newAgent.Initialize();
 
             _agents.Add(newAgent);
+
+            OnAgentSpawned?.Invoke(_area, newAgent);
         }
 
         protected int GetNewAgentID()
