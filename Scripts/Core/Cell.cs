@@ -35,5 +35,10 @@ namespace Biocrowds.Core
         {
             count = _auxins.Count;
         }
+
+        public Bounds GetBounds()
+        {
+            return new Bounds(transform.position, transform.lossyScale);
+        }
     }
 }
