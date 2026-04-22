@@ -9,7 +9,8 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Collections;
-using UnityEngine.AI;
+using Unity.AI;
+using Unity.AI.Navigation;
 using System.Linq;
 
 namespace Biocrowds.Core
