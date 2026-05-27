@@ -80,11 +80,20 @@ public class SpawnArea : MonoBehaviour
         {   
             point = new Vector3(transform.position.x + 0.5f * Random.Range(-transform.lossyScale.x, transform.lossyScale.x),
                                 height,
-                                transform.position.z + 0.5f * Random.Range(-transform.lossyScale.z, transform.lossyScale.z)
-            ); ;
+                                transform.position.z + 0.5f * Random.Range(-transform.lossyScale.z, transform.lossyScale.z) );
         }
         
         return _collider.ClosestPoint(point);
+    }
+    public bool IsInsideArea(Vector3 point, float height = 0.0f)
+    {
+        Bounds bounds;
+        if (_collider.enabled)
+            bounds = _collider.bounds;            
+        else
+            bounds = new Bounds(transform.position, transform.lossyScale);
+
+        return bounds.Contains(point);
     }
     public void ShowMesh(bool _show)
     {

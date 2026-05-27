@@ -175,7 +175,6 @@ namespace Biocrowds.Core
             yield return StartCoroutine(CreateCells());
 
             yield return StartCoroutine(_markerSpawner.CreateMarkers(_cells, _auxins));
-            Debug.Log(_auxins.Count/_cells.Count);
 
             //populate cells with auxins
             //yield return StartCoroutine(DartThrowing());
@@ -475,6 +474,7 @@ namespace Biocrowds.Core
             newAgent.removeWhenGoalReached = _removeWhenGoalReached;
             newAgent.World = this;
             _agents.Add(newAgent);
+            OnAgentSpawned?.Invoke(null, newAgent);
         }
 
         protected void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
@@ -498,15 +498,18 @@ namespace Biocrowds.Core
             Random.InitState(oldSeed);
             Random.Range(0, 1);
 
+            do
+            {
+                _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;                
+                found = _area.IsInsideArea(_pos);
+                tries++;
+            } while (!found && tries < 500);
+
             if (!found)
             {
                 Debug.LogError("Could not find cells with auxins to spawn agent");
                 return;
             }
-
-            _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
-                
-
 
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)], 
                 _pos, Quaternion.identity, _agentsContainer);
@@ -534,7 +537,6 @@ namespace Biocrowds.Core
             newAgent.Initialize();
 
             _agents.Add(newAgent);
-
             OnAgentSpawned?.Invoke(_area, newAgent);
         }
 
