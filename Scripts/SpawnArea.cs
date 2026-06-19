@@ -24,6 +24,10 @@ public class SpawnArea : MonoBehaviour
     private float cycleCounter = 0.0f;
     private bool cycleReady = false;
 
+    [Header("Entering Spawner Settings")]
+    public bool setGoalOnEnter = false;
+    public bool teleportToGoalOnEnter = false;
+    public List<GameObject> enteringGoalList;
 
     public bool CycleReady { get => cycleReady;  }
     public bool Finished => (limitRepeatingSpawn && quantityLimitToSpawn <= 0) || quantitySpawnedEachCycle == 0;

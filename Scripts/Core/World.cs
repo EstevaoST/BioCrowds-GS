@@ -192,6 +192,7 @@ namespace Biocrowds.Core
         protected virtual IEnumerator CreateCells()
         {
             Transform cellPool = new GameObject("Cells").transform;
+            cellPool.gameObject.SetActive(false);
             Vector3 _spawnPos = new Vector3();
 
             for (int i = 0; i < _dimension.x / 2; i++) //i + agentRadius * 2
@@ -461,11 +462,10 @@ namespace Biocrowds.Core
             return _cells[_minIndex];
         }
 
-        protected void SpawnNewAgent(Vector3 _pos, bool _removeWhenGoalReached, 
-            List<GameObject> _goalList)
+        protected void SpawnNewAgent(Vector3 _pos, bool _removeWhenGoalReached, List<GameObject> _goalList)
         {
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)],
-                _pos, Quaternion.identity, _agentsContainer);
+                                         _pos, Quaternion.identity, _agentsContainer);
             newAgent.name = "Agent [" + GetNewAgentID() + "]";  //name
             newAgent.CurrentCell = GetClosestCellToPoint(_pos);
             newAgent.agentRadius = AGENT_RADIUS;  //agent radius
