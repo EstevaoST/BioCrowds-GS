@@ -364,6 +364,10 @@ namespace Biocrowds.Core
                 }
                 _area.ResetCycleReady();
             }
+            foreach (SpawnArea _area in spawnAreas)
+            {
+                _area.TeleportBufferedAgents();
+            }
 
             // Update de Navmesh for each agent 
             for (int i = 0; i < _agents.Count; i++)
@@ -416,10 +420,19 @@ namespace Biocrowds.Core
                 if (!_agents[i].isWaiting)
                     _agents[i].MovementStep(deltaTime);
 
+
+                if (_agents[i].IsAtCurrentGoal())
+                {
+                    SpawnArea goal = _agents[i].GetCurrentGoal()?.GetComponentInChildren<SpawnArea>();
+                    if (goal != null)
+                    {
+                        goal.AgentEntered(_agents[i]);
+                    }
+                }
+
                 _agents[i].WaitStep(deltaTime);
-                //if (_agents[i].IsAtCurrentGoal() && !_agents[i].isWaiting)
 
-
+                //if (_agents[i].IsAtCurrentGoal() && !_agents[i].isWaiting)               
                 if (_agents[i].removeWhenGoalReached && _agents[i].IsAtFinalGoal())
                     _agentsToRemove.Add(_agents[i]);
             }
@@ -520,14 +533,14 @@ namespace Biocrowds.Core
             if (_isInitialSpawn)
             {
                 newAgent.Goal = _area.initialAgentsGoalList[0];  //agent goal
-                newAgent.goalsList = _area.initialAgentsGoalList;
+                newAgent.goalsList.AddRange(_area.initialAgentsGoalList);
                 newAgent.removeWhenGoalReached = _area.initialRemoveWhenGoalReached;
                 newAgent.goalsWaitList = _area.initialWaitList;
             }
             else
             {
                 newAgent.Goal = _area.repeatingGoalList[0];  //agent goal
-                newAgent.goalsList = _area.repeatingGoalList;
+                newAgent.goalsList.AddRange(_area.repeatingGoalList);
                 newAgent.removeWhenGoalReached = _area.repeatingRemoveWhenGoalReached;
                 newAgent.goalsWaitList = _area.repeatingWaitList;
                 if(_area.limitRepeatingSpawn)

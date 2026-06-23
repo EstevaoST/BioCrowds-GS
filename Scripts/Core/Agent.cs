@@ -37,7 +37,7 @@ namespace Biocrowds.Core
         private float waitCount = 0f;
 
         [SerializeField]
-        private int goalIndex = 0;
+        public int goalIndex = 0;
         public bool removeWhenGoalReached;
 
         public float goalDistThreshold = 1.0f;
@@ -457,26 +457,39 @@ namespace Biocrowds.Core
                 _currentCell = pCell;
             }
         }
+
+        public GameObject GetCurrentGoal() {
+            return goalsList[goalIndex];
+        }
+
         public bool IsAtCurrentGoal()
         {
             //Debug.Log(name + " : " + Vector3.Distance(transform.position, _goalPosition));
-            Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
-            Vector2 goalPos = new Vector2(goalsList[goalIndex].transform.position.x,
-                goalsList[goalIndex].transform.position.z);
-            return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
-        }
-
-        public bool IsAtFinalGoal()
-        {
-            //Debug.Log(name + " : " + Vector3.Distance(transform.position, goalsList[goalsList.Count - 1].transform.position));
-            Collider goalCol = goalsList[goalsList.Count - 1].GetComponent<Collider>();
+            GameObject goal = goalsList[goalIndex];
+            Collider goalCol = goal.GetComponent<Collider>();
             if (goalCol != null)
                 return goalCol.bounds.Contains(transform.position);
             else
             {
                 Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
-                Vector2 goalPos = new Vector2(goalsList[goalsList.Count - 1].transform.position.x,
-                                              goalsList[goalsList.Count - 1].transform.position.z);
+                Vector2 goalPos = new Vector2(goal.transform.position.x,
+                                              goal.transform.position.z);
+                return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
+            }
+        }
+
+        public bool IsAtFinalGoal()
+        {
+            //Debug.Log(name + " : " + Vector3.Distance(transform.position, goalsList[goalsList.Count - 1].transform.position));
+            GameObject goal = goalsList[goalsList.Count - 1];
+            Collider goalCol = goal.GetComponent<Collider>();
+            if (goalCol != null)
+                return goalCol.bounds.Contains(transform.position);
+            else
+            {
+                Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
+                Vector2 goalPos = new Vector2(goal.transform.position.x,
+                                              goal.transform.position.z);
                 return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
             }
         }
