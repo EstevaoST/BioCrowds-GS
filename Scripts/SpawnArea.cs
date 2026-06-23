@@ -106,28 +106,13 @@ public class SpawnArea : MonoBehaviour
         _meshRenderer.enabled = _show;
     }
 
-    public void TeleportBufferedAgents()
-    {
-        if (teleportBuffer.Count == 0 || !teleportToGoalOnEnter)
-            return;
-
-        GameObject goal = enteringGoalList[0];
-        SpawnArea area = goal.GetComponentInChildren<SpawnArea>();
-        foreach (Agent agent in teleportBuffer)
-        {            
-            agent.transform.position = goal.transform.position;
-            area?.AgentEntered(agent);
-        }
-        teleportBuffer.Clear();
-    }
     public void AgentEntered(Agent agent)
     {
         if (setGoalOnEnter)
         {
             agent.goalsList.Clear();
-            agent.goalsList.Add(gameObject);
             agent.goalsList.AddRange(enteringGoalList);
-            agent.goalIndex = 1;
+            agent.goalIndex = 0;
         }
 
         if (teleportToGoalOnEnter)

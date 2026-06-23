@@ -366,7 +366,7 @@ namespace Biocrowds.Core
             }
             foreach (SpawnArea _area in spawnAreas)
             {
-                _area.TeleportBufferedAgents();
+                TeleportBufferedAgetns(_area);
             }
 
             // Update de Navmesh for each agent 
@@ -493,36 +493,7 @@ namespace Biocrowds.Core
         protected void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
         {
             // Get a random point to a random cell
-            Vector3 _pos = _area.GetRandomPoint();
-            Cell c = GetClosestCellToPoint(_pos);
-
-            int oldSeed = Random.seed;
-            int tries = 0;
-            bool found = c.Auxins.Count > 0;
-            while (!found && tries < 500)
-            {
-                // while cell is not traversable, randomize another cell
-                _pos = _area.GetRandomPoint();
-                c = GetClosestCellToPoint(_pos);
-                tries++;
-                found = c.Auxins.Count > 0;
-            }
-            // return seed to oldstate to not disrturb random sequentiation
-            Random.InitState(oldSeed);
-            Random.Range(0, 1);
-
-            do
-            {
-                _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;                
-                found = _area.IsInsideArea(_pos);
-                tries++;
-            } while (!found && tries < 500);
-
-            if (!found)
-            {
-                Debug.LogError("Could not find cells with auxins to spawn agent");
-                return;
-            }
+            Vector3 _pos = GetRandomPoinInArea(_area);
 
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)], 
                 _pos, Quaternion.identity, _agentsContainer);
@@ -551,6 +522,54 @@ namespace Biocrowds.Core
 
             _agents.Add(newAgent);
             OnAgentSpawned?.Invoke(_area, newAgent);
+        }
+
+        protected void TeleportBufferedAgetns(SpawnArea _area)
+        {
+            if (_area.teleportBuffer.Count == 0)
+                return;
+
+            GameObject goal = _area.enteringGoalList[0];
+            SpawnArea area = goal.GetComponentInChildren<SpawnArea>();
+            foreach (Agent agent in _area.teleportBuffer)
+            {
+                agent.transform.position = area != null ? GetRandomPoinInArea(area) 
+                                                        : goal.transform.position;
+            }
+            _area.teleportBuffer.Clear();
+        }
+
+        protected Vector3 GetRandomPoinInArea(SpawnArea _area)
+        {
+            Vector3 _pos;
+            Cell c;
+            int oldSeed = Random.seed;
+            int tries = 0;
+            bool found = false;
+            do
+            {
+                tries++;
+                // while cell is not traversable, randomize another cell
+                _pos = _area.GetRandomPoint();
+                c = GetClosestCellToPoint(_pos);
+                if (c.Auxins.Count <= 0) continue;
+
+                // get an auxin that it is fully inside the area
+                _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
+                found = _area.IsInsideArea(_pos);
+            } while (!found && tries < 500);
+
+            // return seed to oldstate to not disrturb random sequentiation
+            Random.InitState(oldSeed);
+            Random.Range(0, 1);
+
+            if (!found)
+            {
+                Debug.LogError("Could not find cells with auxins to spawn agent");
+                throw new System.Exception("Could not find cells with auxins to spawn agent");
+            }
+
+            return _pos;
         }
 
         protected int GetNewAgentID()
