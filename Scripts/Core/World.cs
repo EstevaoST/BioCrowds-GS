@@ -192,6 +192,7 @@ namespace Biocrowds.Core
         protected virtual IEnumerator CreateCells()
         {
             Transform cellPool = new GameObject("Cells").transform;
+            cellPool.gameObject.SetActive(false);
             Vector3 _spawnPos = new Vector3();
 
             for (int i = 0; i < _dimension.x / 2; i++) //i + agentRadius * 2
@@ -363,6 +364,10 @@ namespace Biocrowds.Core
                 }
                 _area.ResetCycleReady();
             }
+            foreach (SpawnArea _area in spawnAreas)
+            {
+                TeleportBufferedAgetns(_area);
+            }
 
             // Update de Navmesh for each agent 
             for (int i = 0; i < _agents.Count; i++)
@@ -415,10 +420,19 @@ namespace Biocrowds.Core
                 if (!_agents[i].isWaiting)
                     _agents[i].MovementStep(deltaTime);
 
+
+                if (_agents[i].IsAtCurrentGoal())
+                {
+                    SpawnArea goal = _agents[i].GetCurrentGoal()?.GetComponentInChildren<SpawnArea>();
+                    if (goal != null)
+                    {
+                        goal.AgentEntered(_agents[i]);
+                    }
+                }
+
                 _agents[i].WaitStep(deltaTime);
-                //if (_agents[i].IsAtCurrentGoal() && !_agents[i].isWaiting)
 
-
+                //if (_agents[i].IsAtCurrentGoal() && !_agents[i].isWaiting)               
                 if (_agents[i].removeWhenGoalReached && _agents[i].IsAtFinalGoal())
                     _agentsToRemove.Add(_agents[i]);
             }
@@ -461,11 +475,10 @@ namespace Biocrowds.Core
             return _cells[_minIndex];
         }
 
-        protected void SpawnNewAgent(Vector3 _pos, bool _removeWhenGoalReached, 
-            List<GameObject> _goalList)
+        protected void SpawnNewAgent(Vector3 _pos, bool _removeWhenGoalReached, List<GameObject> _goalList)
         {
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)],
-                _pos, Quaternion.identity, _agentsContainer);
+                                         _pos, Quaternion.identity, _agentsContainer);
             newAgent.name = "Agent [" + GetNewAgentID() + "]";  //name
             newAgent.CurrentCell = GetClosestCellToPoint(_pos);
             newAgent.agentRadius = AGENT_RADIUS;  //agent radius
@@ -480,36 +493,7 @@ namespace Biocrowds.Core
         protected void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
         {
             // Get a random point to a random cell
-            Vector3 _pos = _area.GetRandomPoint();
-            Cell c = GetClosestCellToPoint(_pos);
-
-            int oldSeed = Random.seed;
-            int tries = 0;
-            bool found = c.Auxins.Count > 0;
-            while (!found && tries < 500)
-            {
-                // while cell is not traversable, randomize another cell
-                _pos = _area.GetRandomPoint();
-                c = GetClosestCellToPoint(_pos);
-                tries++;
-                found = c.Auxins.Count > 0;
-            }
-            // return seed to oldstate to not disrturb random sequentiation
-            Random.InitState(oldSeed);
-            Random.Range(0, 1);
-
-            do
-            {
-                _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;                
-                found = _area.IsInsideArea(_pos);
-                tries++;
-            } while (!found && tries < 500);
-
-            if (!found)
-            {
-                Debug.LogError("Could not find cells with auxins to spawn agent");
-                return;
-            }
+            Vector3 _pos = GetRandomPoinInArea(_area);
 
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)], 
                 _pos, Quaternion.identity, _agentsContainer);
@@ -520,14 +504,14 @@ namespace Biocrowds.Core
             if (_isInitialSpawn)
             {
                 newAgent.Goal = _area.initialAgentsGoalList[0];  //agent goal
-                newAgent.goalsList = _area.initialAgentsGoalList;
+                newAgent.goalsList.AddRange(_area.initialAgentsGoalList);
                 newAgent.removeWhenGoalReached = _area.initialRemoveWhenGoalReached;
                 newAgent.goalsWaitList = _area.initialWaitList;
             }
             else
             {
                 newAgent.Goal = _area.repeatingGoalList[0];  //agent goal
-                newAgent.goalsList = _area.repeatingGoalList;
+                newAgent.goalsList.AddRange(_area.repeatingGoalList);
                 newAgent.removeWhenGoalReached = _area.repeatingRemoveWhenGoalReached;
                 newAgent.goalsWaitList = _area.repeatingWaitList;
                 if(_area.limitRepeatingSpawn)
@@ -538,6 +522,54 @@ namespace Biocrowds.Core
 
             _agents.Add(newAgent);
             OnAgentSpawned?.Invoke(_area, newAgent);
+        }
+
+        protected void TeleportBufferedAgetns(SpawnArea _area)
+        {
+            if (_area.teleportBuffer.Count == 0)
+                return;
+
+            GameObject goal = _area.enteringGoalList[0];
+            SpawnArea area = goal.GetComponentInChildren<SpawnArea>();
+            foreach (Agent agent in _area.teleportBuffer)
+            {
+                agent.transform.position = area != null ? GetRandomPoinInArea(area) 
+                                                        : goal.transform.position;
+            }
+            _area.teleportBuffer.Clear();
+        }
+
+        protected Vector3 GetRandomPoinInArea(SpawnArea _area)
+        {
+            Vector3 _pos;
+            Cell c;
+            int oldSeed = Random.seed;
+            int tries = 0;
+            bool found = false;
+            do
+            {
+                tries++;
+                // while cell is not traversable, randomize another cell
+                _pos = _area.GetRandomPoint();
+                c = GetClosestCellToPoint(_pos);
+                if (c.Auxins.Count <= 0) continue;
+
+                // get an auxin that it is fully inside the area
+                _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
+                found = _area.IsInsideArea(_pos);
+            } while (!found && tries < 500);
+
+            // return seed to oldstate to not disrturb random sequentiation
+            Random.InitState(oldSeed);
+            Random.Range(0, 1);
+
+            if (!found)
+            {
+                Debug.LogError("Could not find cells with auxins to spawn agent");
+                throw new System.Exception("Could not find cells with auxins to spawn agent");
+            }
+
+            return _pos;
         }
 
         protected int GetNewAgentID()

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Biocrowds.Core;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,11 @@ public class SpawnArea : MonoBehaviour
     private float cycleCounter = 0.0f;
     private bool cycleReady = false;
 
+    [Header("Entering Spawner Settings")]
+    public bool setGoalOnEnter = false;
+    public bool teleportToGoalOnEnter = false;
+    public List<GameObject> enteringGoalList;
+    public List<Agent> teleportBuffer;
 
     public bool CycleReady { get => cycleReady;  }
     public bool Finished => (limitRepeatingSpawn && quantityLimitToSpawn <= 0) || quantitySpawnedEachCycle == 0;
@@ -98,5 +104,20 @@ public class SpawnArea : MonoBehaviour
     public void ShowMesh(bool _show)
     {
         _meshRenderer.enabled = _show;
+    }
+
+    public void AgentEntered(Agent agent)
+    {
+        if (setGoalOnEnter)
+        {
+            agent.goalsList.Clear();
+            agent.goalsList.AddRange(enteringGoalList);
+            agent.goalIndex = 0;
+        }
+
+        if (teleportToGoalOnEnter)
+        {
+            teleportBuffer.Add(agent);
+        }
     }
 }
