@@ -364,10 +364,6 @@ namespace Biocrowds.Core
                 }
                 _area.ResetCycleReady();
             }
-            foreach (SpawnArea _area in spawnAreas)
-            {
-                TeleportBufferedAgetns(_area);
-            }
 
             // Update de Navmesh for each agent 
             for (int i = 0; i < _agents.Count; i++)
@@ -417,20 +413,30 @@ namespace Biocrowds.Core
                 //calculate speed vector
                 _agents[i].CalculateVelocity();
                 //step
-                if (!_agents[i].isWaiting)
+                if (_agents[i].shouldMove)
                     _agents[i].MovementStep(deltaTime);
 
+                _agents[i].WaitStep(deltaTime);
 
+                _agents[i].wasTeleported = false;
+            }
+
+            // teleporta agentes buffered de cada spawn
+            foreach (SpawnArea _area in spawnAreas)
+            {
+                TeleportBufferedAgents(_area);
+            }
+            
+            for (int i = 0; i < _agents.Count; i++)
+            {
                 if (_agents[i].IsAtCurrentGoal())
                 {
                     SpawnArea goal = _agents[i].GetCurrentGoal()?.GetComponentInChildren<SpawnArea>();
                     if (goal != null)
-                    {
+                    {   // depednendo do goal, coloca agentes pro buffer de teleporte
                         goal.AgentEntered(_agents[i]);
                     }
                 }
-
-                _agents[i].WaitStep(deltaTime);
 
                 //if (_agents[i].IsAtCurrentGoal() && !_agents[i].isWaiting)               
                 if (_agents[i].removeWhenGoalReached && _agents[i].IsAtFinalGoal())
@@ -524,7 +530,7 @@ namespace Biocrowds.Core
             OnAgentSpawned?.Invoke(_area, newAgent);
         }
 
-        protected void TeleportBufferedAgetns(SpawnArea _area)
+        protected void TeleportBufferedAgents(SpawnArea _area)
         {
             if (_area.teleportBuffer.Count == 0)
                 return;
@@ -535,6 +541,7 @@ namespace Biocrowds.Core
             {
                 agent.transform.position = area != null ? GetRandomPoinInArea(area) 
                                                         : goal.transform.position;
+                agent.wasTeleported = true;
             }
             _area.teleportBuffer.Clear();
         }

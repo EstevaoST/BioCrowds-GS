@@ -35,6 +35,8 @@ namespace Biocrowds.Core
         public bool isWaiting = false;
         [SerializeField]
         private float waitCount = 0f;
+        public bool wasTeleported = false;
+        public bool shouldMove => !isWaiting && !wasTeleported;
 
         [SerializeField]
         public int goalIndex = 0;
