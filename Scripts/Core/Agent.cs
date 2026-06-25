@@ -173,14 +173,13 @@ namespace Biocrowds.Core
                 return;
 
             _elapsedTime = 0.0f;
-
+            Transform g = goalsList[goalIndex].transform;
             //calculate agent path
-            //bool foundPath = NavMesh.CalculatePath(transform.position, Goal.transform.position, NavMesh.AllAreas, _navMeshPath);
-            bool foundPath = NavMesh.CalculatePath(transform.position, goalsList[goalIndex].transform.position,
-                NavMesh.AllAreas, _navMeshPath);
-            //update its goal if path is found
-            if (foundPath)
-            {
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit1, 0.1f                  , NavMesh.AllAreas) &&
+                NavMesh.SamplePosition(g.position        , out NavMeshHit hit2, g.lossyScale.magnitude, NavMesh.AllAreas) &&
+                NavMesh.CalculatePath(hit1.position, hit2.position, NavMesh.AllAreas, _navMeshPath) )
+            { 
+                //update its goal if path is found
                 int pIndex = 1;
                 if (pIndex >= _navMeshPath.corners.Length)
                     pIndex = _navMeshPath.corners.Length - 1;
