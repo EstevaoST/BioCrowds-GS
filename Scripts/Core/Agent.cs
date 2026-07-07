@@ -175,7 +175,7 @@ namespace Biocrowds.Core
             _elapsedTime = 0.0f;
             Transform g = goalsList[goalIndex].transform;
             //calculate agent path
-            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit1, 0.1f                  , NavMesh.AllAreas) &&
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit1, agentRadius           , NavMesh.AllAreas) &&
                 NavMesh.SamplePosition(g.position        , out NavMeshHit hit2, g.lossyScale.magnitude, NavMesh.AllAreas) &&
                 NavMesh.CalculatePath(hit1.position, hit2.position, NavMesh.AllAreas, _navMeshPath) )
             { 

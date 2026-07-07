@@ -562,18 +562,17 @@ namespace Biocrowds.Core
                 if (c.Auxins.Count <= 0) continue;
 
                 // get an auxin that it is fully inside the area
-                _pos = c.Auxins[Random.Range(0, c.Auxins.Count)].Position;
-                found = _area.IsInsideArea(_pos);
+                _pos = c.Auxins.OrderBy(x => (x.Position - _pos).sqrMagnitude).First().Position;
+                found = true;
             } while (!found && tries < 500);
 
             // return seed to oldstate to not disrturb random sequentiation
             Random.InitState(oldSeed);
-            Random.Range(0, 1);
 
             if (!found)
             {
-                Debug.LogError("Could not find cells with auxins to spawn agent");
-                throw new System.Exception("Could not find cells with auxins to spawn agent");
+                Debug.LogError("Could not find cells with auxins to get point in area");
+                throw new System.Exception("Could not find cells with auxins to get point in area");
             }
 
             return _pos;
