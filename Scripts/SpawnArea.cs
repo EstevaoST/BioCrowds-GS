@@ -77,18 +77,17 @@ public class SpawnArea : MonoBehaviour
         Vector3 min, max;
         if (_collider.enabled)
         {
-            min = new Vector3(_collider.bounds.min.x, height, _collider.bounds.min.z);
-            max = new Vector3(_collider.bounds.max.x, height, _collider.bounds.max.z);
+            min = _collider.bounds.min;
+            max = _collider.bounds.max;
         }
         else
         {
-            min = new Vector3(-transform.lossyScale.x, height, -transform.lossyScale.z);
-            max = new Vector3( transform.lossyScale.x, height,  transform.lossyScale.z);
+            min = new Vector3(-transform.lossyScale.x, 0     , -transform.lossyScale.z) + transform.position;
+            max = new Vector3( transform.lossyScale.x, height,  transform.lossyScale.z) + transform.position;
         }
         point = new Vector3(Mathf.Lerp(min.x, max.x, point.x), Mathf.Lerp(min.y, max.y, point.y), Mathf.Lerp(min.z, max.z, point.z));
-        point = point + transform.position;
-        point = transform.TransformDirection(point);       
-        return _collider.ClosestPoint(point);
+        point = transform.TransformDirection(point);
+        return point;
     }
     public bool IsInsideArea(Vector3 point, float height = 0.0f)
     {

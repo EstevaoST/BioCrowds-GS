@@ -539,8 +539,10 @@ namespace Biocrowds.Core
             SpawnArea area = goal.GetComponentInChildren<SpawnArea>();
             foreach (Agent agent in _area.teleportBuffer)
             {
-                agent.transform.position = area != null ? GetRandomPoinInArea(area) 
-                                                        : goal.transform.position;
+                if (area != null)
+                    agent.transform.position = GetRandomPoinInArea(area);
+                else
+                    agent.transform.position = goal.transform.position;
                 agent.wasTeleported = true;
             }
             _area.teleportBuffer.Clear();
@@ -550,7 +552,6 @@ namespace Biocrowds.Core
         {
             Vector3 _pos;
             Cell c;
-            int oldSeed = Random.seed;
             int tries = 0;
             bool found = false;
             do
@@ -565,9 +566,6 @@ namespace Biocrowds.Core
                 _pos = c.Auxins.OrderBy(x => (x.Position - _pos).sqrMagnitude).First().Position;
                 found = true;
             } while (!found && tries < 500);
-
-            // return seed to oldstate to not disrturb random sequentiation
-            Random.InitState(oldSeed);
 
             if (!found)
             {

@@ -26,10 +26,6 @@ public class DartThrowingMarkerSpawner : MarkerSpawner
     private IEnumerator PopulateCell(Cell cell, List<Auxin> auxins, int cellIndex)
     {
         float cellHalfSize = (_cellSize / 2.0f) * (1.0f - (MarkerRadius/2f));
-
-        // Set this counter to break the loop if it is taking too long (maybe there is no more space)
-        int oldseed = Random.seed;
-
         for (int i = 0; i < _maxMarkersPerCell; i++)
         {           
             // Search position for new Marker
@@ -49,7 +45,6 @@ public class DartThrowingMarkerSpawner : MarkerSpawner
             auxins.Add(newMarker);
             cell.Auxins.Add(newMarker);
         }
-        Random.InitState(oldseed);
         Random.Range(0, 1);
         yield break;
     }
