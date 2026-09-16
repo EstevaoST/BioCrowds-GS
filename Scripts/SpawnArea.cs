@@ -73,7 +73,7 @@ public class SpawnArea : MonoBehaviour
 
     public Vector3 GetRandomPoint(float height = 0.0f)
     {
-        Vector3 point = new Vector3(Random.Range(0.0f,1.0f), 0, Random.Range(0.0f, 1.0f));
+        Vector3 point = new Vector3(Random.Range(0.0f,1.0f), 1, Random.Range(0.0f, 1.0f));
         Vector3 min, max;
         if (_collider.enabled)
         {
