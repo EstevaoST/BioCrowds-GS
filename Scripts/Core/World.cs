@@ -544,6 +544,8 @@ namespace Biocrowds.Core
                 else
                     agent.transform.position = goal.transform.position;
                 agent.wasTeleported = true;
+
+                area.AgentEntered(agent);
             }
             _area.teleportBuffer.Clear();
         }

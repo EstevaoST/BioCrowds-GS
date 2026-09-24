@@ -205,6 +205,11 @@ namespace Biocrowds.Core
             if (_visualAgent != null) _visualAgent.Step();
         }
 
+
+        public void ResetPath()
+        {
+            _elapsedTime = UPDATE_NAVMESH_INTERVAL;
+        }
         //clear agent´s informations
         void ClearAgent()
         {
