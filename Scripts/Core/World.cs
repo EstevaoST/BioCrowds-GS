@@ -45,15 +45,15 @@ namespace Biocrowds.Core
         [SerializeField] protected NavMeshSurface _navmeshObject;
 
         [SerializeField]
-        protected Vector2 _dimension = new Vector2(30.0f, 20.0f);
-        public Vector2 Dimension
+        protected Vector3 _dimension = new Vector3(30.0f, 20.0f, 20.0f);
+        public Vector3 Dimension
         {
             get { return _dimension; }
         }
 
         [SerializeField]
-        protected Vector2 _offset = new Vector2(0.0f, 0.0f);
-        public Vector2 Offset
+        protected Vector3 _offset = new Vector3(0.0f, 0.0f, 0.0f);
+        public Vector3 Offset
         {
             get { return _offset; }
         }
@@ -124,21 +124,23 @@ namespace Biocrowds.Core
                     Debug.LogWarning("PlaneMeshFilter Mesh isn't a Plane. " +
                         "The difference in scale may cause unintended behavior.");
 
-                _dimension = new Vector2(Mathf.Ceil(planeMeshFilter.transform.localScale.x * 10f),
-                    Mathf.Ceil(planeMeshFilter.transform.localScale.z * 10f));
+                _dimension = new Vector3(Mathf.Ceil(planeMeshFilter.transform.localScale.x * 10f),
+                                         Mathf.Ceil(planeMeshFilter.transform.localScale.z * 10f));
                 _dimension.x += _dimension.x % 2;
                 _dimension.y += _dimension.y % 2;
+                _dimension.z += _dimension.z % 2;
 
-                _offset = new Vector2(Mathf.Round(planeMeshFilter.transform.position.x),
-                    Mathf.Round(planeMeshFilter.transform.position.z));
+                _offset = new Vector3(Mathf.Round(planeMeshFilter.transform.position.x),
+                                      Mathf.Round(planeMeshFilter.transform.position.z));
                 _offset.x -= (_dimension.x / 2f);
                 _offset.y -= (_dimension.y / 2f);
+                _offset.z -= (_dimension.z / 2f);
 
                 planeMeshFilter.gameObject.SetActive(false);
             }
         }
 
-        public void SetDimensionAndOffset(Vector2 dimension, Vector2 offset)
+        public void SetDimensionAndOffset(Vector3 dimension, Vector3 offset)
         {
             this._dimension = dimension;
             this._offset = offset;
@@ -195,29 +197,34 @@ namespace Biocrowds.Core
             cellPool.gameObject.SetActive(false);
             Vector3 _spawnPos = new Vector3();
 
-            for (int i = 0; i < _dimension.x / 2; i++) //i + agentRadius * 2
+            for (int i = 0; i <= _dimension.x / 2; i++) //i + agentRadius * 2
             {
-                for (int j = 0; j < _dimension.y / 2; j++) // j + agentRadius * 2
+                for (int j = 0; j <= _dimension.y / 2; j++) // j + agentRadius * 2
                 {
-                    //instantiante a new cell
-                    _spawnPos.x = (1.0f + (i * 2.0f)) + _offset.x;
-                    _spawnPos.z = (1.0f + (j * 2.0f)) + _offset.y;
+                    for (int k = 0; k <= _dimension.z / 2; k++) // k + agentRadius * 2
+                    {
+                        //instantiante a new cell
+                        _spawnPos.x = (1.0f + (i * 2.0f)) + _offset.x;
+                        _spawnPos.y = (       (j * 2.0f)) + _offset.y;
+                        _spawnPos.z = (1.0f + (k * 2.0f)) + _offset.z;
 
-                    Cell newCell = Instantiate(_cellPrefab, _spawnPos, Quaternion.Euler(90.0f, 0.0f, 0.0f), cellPool);
+                        Cell newCell = Instantiate(_cellPrefab, _spawnPos, Quaternion.Euler(90.0f, 0.0f, 0.0f), cellPool);
 
-                    //change its name
-                    newCell.name = "Cell [" + i + "][" + j + "]";
+                        //change its name
+                        newCell.name = "Cell [" + i + "][" + j + "][" + k + "]";
 
-                    //metadata for optimization
-                    newCell.X = i;
-                    newCell.Z = j;
+                        //metadata for optimization
+                        newCell.X = i;
+                        newCell.Y = j;
+                        newCell.Z = k;
 
-                    newCell.ShowMesh(SceneController.ShowCells);
+                        newCell.ShowMesh(SceneController.ShowCells);
 
-                    _cells.Add(newCell);
+                        _cells.Add(newCell);
 
-                    if(!fastLoadingCells)
-                        yield return null;
+                        if (!fastLoadingCells)
+                            yield return null;
+                    }
                 }
             }
             yield return null;

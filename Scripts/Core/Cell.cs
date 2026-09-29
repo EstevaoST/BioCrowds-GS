@@ -13,6 +13,7 @@ namespace Biocrowds.Core
     public class Cell : MonoBehaviour
     {
         public int X;
+        public int Y;
         public int Z;
 
         private List<Auxin> _auxins = new List<Auxin>();

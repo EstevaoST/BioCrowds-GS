@@ -70,6 +70,7 @@ namespace Biocrowds.Core
         }
 
         private int _totalX;
+        private int _totalY;
         private int _totalZ;
 
         private NavMeshPath _navMeshPath = null;
@@ -108,8 +109,9 @@ namespace Biocrowds.Core
             }
             if (_visualAgent != null) _visualAgent.Initialize(transform.position, this);
             //cache world info
-            _totalX = Mathf.CeilToInt(_world.Dimension.x / 2.0f) - 1;
-            _totalZ = Mathf.CeilToInt(_world.Dimension.y / 2.0f);
+            _totalX = 1 + (int)(_world.Dimension.x / 2);
+            _totalY = 1 + (int)(_world.Dimension.y / 2);
+            _totalZ = 1 + (int)(_world.Dimension.z / 2);
         }
 
         public void NavmeshStep(float _timeStep)
@@ -394,38 +396,36 @@ namespace Biocrowds.Core
             //distance from agent to cell, to define agent new cell
             float distanceToCellSqr = (transform.position - _currentCell.transform.position).sqrMagnitude; //Vector3.Distance(transform.position, _currentCell.transform.position);
 
-            //cap the limits
+            //cap the limits - IN 3D!!!!
             //[ ][ ][ ]
             //[ ][X][ ]
             //[ ][ ][ ]
-            if (_currentCell.X > 0 && _currentCell.Z > 0)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X - 1, _currentCell.Z - 1);
+            for (int x = -1; x <= 1; x++)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    for (int z = -1; z <= 1; z++)
+                    {
+                        if (x == 0 && y == 0 && z == 0)
+                            continue;
 
-            if (_currentCell.X > 0)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X - 1, _currentCell.Z + 0);
-
-            if (_currentCell.X > 0 && _currentCell.Z < _totalZ - 1)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X - 1, _currentCell.Z + 1);
-
-            if (_currentCell.Z > 0)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 0, _currentCell.Z - 1);
-
-            if (_currentCell.Z < _totalZ - 1)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 0, _currentCell.Z + 1);
-
-            if (_currentCell.X < _totalX && _currentCell.Z > 0)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 1, _currentCell.Z - 1);
-
-            if (_currentCell.X < _totalX)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 1, _currentCell.Z + 0);
-
-            if (_currentCell.X < _totalX && _currentCell.Z < _totalZ - 1)
-                CheckAuxins(ref distanceToCellSqr, _currentCell.X + 1, _currentCell.Z + 1);                        
+                        int cellX = _currentCell.X + x;
+                        int cellY = _currentCell.Y + y;
+                        int cellZ = _currentCell.Z + z;
+                        if (cellX >= 0 && cellX < _totalX &&
+                            cellY >= 0 && cellY < _totalY &&
+                            cellZ >= 0 && cellZ < _totalZ)
+                        {
+                            CheckAuxins(ref distanceToCellSqr, cellX, cellY, cellZ);
+                        }
+                    }
+                }
+            }                     
         }
 
-        private void CheckAuxins(ref float pDistToCellSqr, int x, int z)
+        private void CheckAuxins(ref float pDistToCellSqr, int x, int y, int z)
         {
-            CheckAuxins(ref pDistToCellSqr, _world.Cells[x * _totalZ + z]);
+            CheckAuxins(ref pDistToCellSqr, _world.Cells[x * _totalZ * _totalY + y * _totalZ + z]);
         }
         private void CheckAuxins(ref float pDistToCellSqr, Cell pCell)
         {
@@ -477,10 +477,7 @@ namespace Biocrowds.Core
                 return goalCol.bounds.Contains(transform.position);
             else
             {
-                Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
-                Vector2 goalPos = new Vector2(goal.transform.position.x,
-                                              goal.transform.position.z);
-                return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
+                return (Vector3.Distance(transform.position, goal.transform.position) <= goalDistThreshold);
             }
         }
 
@@ -493,10 +490,7 @@ namespace Biocrowds.Core
                 return goalCol.bounds.Contains(transform.position);
             else
             {
-                Vector2 agentPos = new Vector2(transform.position.x, transform.position.z);
-                Vector2 goalPos = new Vector2(goal.transform.position.x,
-                                              goal.transform.position.z);
-                return (Vector2.Distance(agentPos, goalPos) <= goalDistThreshold);
+                return (Vector3.Distance(transform.position, goal.transform.position) <= goalDistThreshold);
             }
         }
     }
