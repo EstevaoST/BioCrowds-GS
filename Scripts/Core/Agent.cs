@@ -109,9 +109,9 @@ namespace Biocrowds.Core
             }
             if (_visualAgent != null) _visualAgent.Initialize(transform.position, this);
             //cache world info
-            _totalX = 1 + (int)(_world.Dimension.x / 2);
-            _totalY = 1 + (int)(_world.Dimension.y / 2);
-            _totalZ = 1 + (int)(_world.Dimension.z / 2);
+            _totalX = 1 + (int)(_world.Dimension.x / _world.CELL_SIZE);
+            _totalY = 1 + (int)(_world.Dimension.y / _world.CELL_HEIGHT);
+            _totalZ = 1 + (int)(_world.Dimension.z / _world.CELL_SIZE);
         }
 
         public void NavmeshStep(float _timeStep)

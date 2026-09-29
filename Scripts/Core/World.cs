@@ -21,10 +21,16 @@ namespace Biocrowds.Core
         public SimulationConfiguration.MarkerSpawnMethod markerSpawnMethod;
 
         [SerializeField] public bool simulateOnUpdate = true;
+        [SerializeField] public bool autoCalculateSimulationArea = false;
         [SerializeField] public bool fastLoadingCells = false;
         [SerializeField] public bool fastLoadingAgents = false;
 
         [SerializeField] public float MAX_AGENTS = 0;
+        
+        //Cell data
+        [SerializeField] public float CELL_SIZE   = 2.00f;
+        [SerializeField] public float CELL_HEIGHT = .5f;
+        
         //agent radius
         [SerializeField] public float AGENT_RADIUS = 1.00f;
 
@@ -172,6 +178,11 @@ namespace Biocrowds.Core
             //NavMeshBuilder.BuildNavMesh();
             //UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
             _navmeshObject.BuildNavMesh();
+            if (autoCalculateSimulationArea)
+            {
+                Bounds navBounds = _navmeshObject.navMeshData.sourceBounds;                
+                SetDimensionAndOffset(navBounds.size, navBounds.min);
+            }
 
             //create all cells based on dimension
             yield return StartCoroutine(CreateCells());
@@ -197,18 +208,19 @@ namespace Biocrowds.Core
             cellPool.gameObject.SetActive(false);
             Vector3 _spawnPos = new Vector3();
 
-            for (int i = 0; i <= _dimension.x / 2; i++) //i + agentRadius * 2
+            for (int i = 0; i <= _dimension.x / CELL_SIZE; i++) //i + agentRadius * 2
             {
-                for (int j = 0; j <= _dimension.y / 2; j++) // j + agentRadius * 2
+                for (int j = 0; j <= _dimension.y / CELL_HEIGHT; j++) // j + agentRadius * 2
                 {
-                    for (int k = 0; k <= _dimension.z / 2; k++) // k + agentRadius * 2
+                    for (int k = 0; k <= _dimension.z / CELL_SIZE; k++) // k + agentRadius * 2
                     {
                         //instantiante a new cell
-                        _spawnPos.x = (1.0f + (i * 2.0f)) + _offset.x;
-                        _spawnPos.y = (       (j * 2.0f)) + _offset.y;
-                        _spawnPos.z = (1.0f + (k * 2.0f)) + _offset.z;
+                        _spawnPos.x = _offset.x + (i * CELL_SIZE) + CELL_SIZE * 0.5f;
+                        _spawnPos.y = _offset.y + (j * CELL_HEIGHT);
+                        _spawnPos.z = _offset.z + (k * CELL_SIZE) + CELL_SIZE * 0.5f;
 
                         Cell newCell = Instantiate(_cellPrefab, _spawnPos, Quaternion.Euler(90.0f, 0.0f, 0.0f), cellPool);
+                        newCell.transform.localScale = new Vector3(CELL_SIZE, CELL_SIZE, CELL_HEIGHT);
 
                         //change its name
                         newCell.name = "Cell [" + i + "][" + j + "][" + k + "]";
