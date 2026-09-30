@@ -187,12 +187,14 @@ namespace Biocrowds.Core
                 int pIndex = 1;
                 if (pIndex >= _navMeshPath.corners.Length)
                     pIndex = _navMeshPath.corners.Length - 1;
-                _goalPosition = new Vector3(_navMeshPath.corners[pIndex].x, 0f, _navMeshPath.corners[pIndex].z);                
-                while(pIndex < _navMeshPath.corners.Length - 1 && Vector3.Distance(transform.position, _goalPosition) < goalDistThreshold)
+                _goalPosition = _navMeshPath.corners[pIndex];
+
+                float sqrGoalDist = goalDistThreshold * goalDistThreshold;
+                while (pIndex < _navMeshPath.corners.Length - 1 && (transform.position - _goalPosition).sqrMagnitude < sqrGoalDist)
                 {
                     // while the next position of the path is near enough, advance on it 
                     pIndex++;
-                    _goalPosition = new Vector3(_navMeshPath.corners[pIndex].x, 0f, _navMeshPath.corners[pIndex].z);
+                    _goalPosition = _navMeshPath.corners[pIndex];
                 }
 
                 _dirAgentGoal = _goalPosition - transform.position;
