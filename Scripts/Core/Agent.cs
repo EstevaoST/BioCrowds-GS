@@ -112,6 +112,8 @@ namespace Biocrowds.Core
             _totalX = 1 + (int)(_world.Dimension.x / _world.CELL_SIZE);
             _totalY = 1 + (int)(_world.Dimension.y / _world.CELL_HEIGHT);
             _totalZ = 1 + (int)(_world.Dimension.z / _world.CELL_SIZE);
+
+            ResetPath();
         }
 
         public void NavmeshStep(float _timeStep)
