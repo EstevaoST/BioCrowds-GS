@@ -7,6 +7,7 @@
 
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 namespace Biocrowds.Core
 {
@@ -20,6 +21,9 @@ namespace Biocrowds.Core
         public int count;
         [SerializeField]
         private MeshRenderer _meshRenderer;
+
+        public Bounds? _bounds = null;
+        public Bounds Bounds => _bounds ??= GetBounds();
 
         public List<Auxin> Auxins
         {
@@ -39,7 +43,8 @@ namespace Biocrowds.Core
 
         public Bounds GetBounds()
         {
-            return new Bounds(transform.position, transform.lossyScale);
+            // faz aquela troca de Y e Z do objeto ser virado e rotacionado
+            return new Bounds(transform.position, new Vector3(transform.lossyScale.x, transform.lossyScale.z, transform.lossyScale.y));
         }
     }
 }

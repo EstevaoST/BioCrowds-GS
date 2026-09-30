@@ -10,10 +10,9 @@ using System.Collections;
 
 namespace Biocrowds.Core
 {
-    public class Auxin : MonoBehaviour
+    public class Auxin
     {
-        [SerializeField]
-        private MeshRenderer _meshRenderer;
+        public string name;
 
         //is auxin taken?
         private bool _isTaken = false;
@@ -31,9 +30,10 @@ namespace Biocrowds.Core
             set
             {
                 _position = value;
-                transform.position = _position;
             }
         }
+
+        public float Size { get; set; }
 
         //min distance from a taken agent
         //when a new agent find it in his personal space, test the distance with this value to see which one is smaller
@@ -75,7 +75,7 @@ namespace Biocrowds.Core
         //}
         public void ShowMesh(bool _show)
         {
-            _meshRenderer.enabled = _show;
+         
         }
     }
 }

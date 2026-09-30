@@ -10,7 +10,7 @@ public class RegularGridMarkerSpawner : MarkerSpawner
     public float randomIntensity = 0.05f;
     public override IEnumerator CreateMarkers(List<Cell> cells, List<Auxin> auxins)
     {
-        _auxinsContainer = new GameObject("Markers").transform;
+        //_auxinsContainer = new GameObject("Markers").transform;
         _cellSize = cells[0].transform.localScale.x;
 
         // Generate a number of markers for each Cell
@@ -61,12 +61,14 @@ public class RegularGridMarkerSpawner : MarkerSpawner
                     continue; // for some reason, marker is outside cell -> skip this marker
 
                 // Creates new Marker and sets its data
-                Auxin newMarker = Instantiate(auxinPrefab, targetPosition, Quaternion.identity, _auxinsContainer);
-                newMarker.transform.localScale = Vector3.one * MarkerRadius;
+                Auxin newMarker = new Auxin();
+                newMarker.Position = targetPosition;                
+                newMarker.Size = MarkerRadius;
                 newMarker.name = "Marker [" + cellIndex + "][" + count + "]";
                 newMarker.Cell = cell;
                 newMarker.Position = targetPosition;
                 newMarker.ShowMesh(SceneController.ShowAuxins);
+                _auxinsContainer.Add(newMarker);
 
                 auxins.Add(newMarker);
                 cell.Auxins.Add(newMarker);

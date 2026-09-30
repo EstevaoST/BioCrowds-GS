@@ -9,7 +9,6 @@ public class DartThrowingMarkerSpawner : MarkerSpawner
 
     public override IEnumerator CreateMarkers(List<Cell> cells, List<Auxin> auxins)
     {
-        _auxinsContainer = new GameObject("Markers").transform;
         _cellSize = cells[0].transform.localScale.x;
 
         _maxMarkersPerCell = Mathf.RoundToInt(MarkerDensity / (MarkerRadius * MarkerRadius));
@@ -35,12 +34,14 @@ public class DartThrowingMarkerSpawner : MarkerSpawner
                 continue;            
 
             // Creates new Marker and sets its data
-            Auxin newMarker = Instantiate(auxinPrefab, targetPosition, Quaternion.identity, _auxinsContainer);
-            newMarker.transform.localScale = Vector3.one * MarkerRadius;
+            Auxin newMarker = new Auxin();
+            newMarker.Position = targetPosition;
+            newMarker.Size = MarkerRadius;
             newMarker.name = "Marker [" + cellIndex + "][" + i + "]";
             newMarker.Cell = cell;
             newMarker.Position = targetPosition;
             newMarker.ShowMesh(SceneController.ShowAuxins);
+            _auxinsContainer.Add(newMarker);
 
             auxins.Add(newMarker);
             cell.Auxins.Add(newMarker);

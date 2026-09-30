@@ -14,7 +14,7 @@ public abstract class MarkerSpawner : MonoBehaviour
     //density
     public float MarkerDensity = 0.65f;
 
-    protected Transform _auxinsContainer;
+    protected List<Auxin> _auxinsContainer = new List<Auxin>();
 
     protected float _cellSize;
     public int _maxMarkersPerCell;
