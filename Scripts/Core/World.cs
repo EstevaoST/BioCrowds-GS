@@ -148,6 +148,11 @@ namespace Biocrowds.Core
 
                 planeMeshFilter.gameObject.SetActive(false);
             }
+
+            if (AGENT_RADIUS > 2 * CELL_SIZE)
+                Debug.LogError("AGENT RADIUS higher than 2 * CELL_SIZE, unexpected behaviour will probably happen");
+            if (AGENT_RADIUS > 2 * CELL_HEIGHT)
+                Debug.LogError("AGENT RADIUS higher than 2 * CELL_HEIGHT, unexpected behaviour will probably happen");
         }
 
         public void SetDimensionAndOffset(Vector3 dimension, Vector3 offset)

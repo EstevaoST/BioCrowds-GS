@@ -105,7 +105,7 @@ namespace Biocrowds.Core
             if (Goal != null)
             {
                 _goalPosition = Goal.transform.position;
-                _dirAgentGoal = _goalPosition - transform.position;
+                _dirAgentGoal = (_goalPosition - transform.position).normalized;
             }
             if (_visualAgent != null) _visualAgent.Initialize(transform.position, this);
             //cache world info
@@ -196,14 +196,13 @@ namespace Biocrowds.Core
                     pIndex++;
                     _goalPosition = _navMeshPath.corners[pIndex];
                 }
-
-                _dirAgentGoal = _goalPosition - transform.position;
             }
             else
             {
-                _goalPosition = goalsList[goalIndex].transform.position;
-                _dirAgentGoal = _goalPosition - transform.position;
+                _goalPosition = goalsList[goalIndex].transform.position;                
             }
+
+            _dirAgentGoal = (_goalPosition - transform.position).normalized;
         }
 
         public void UpdateVisualAgent()
@@ -224,7 +223,7 @@ namespace Biocrowds.Core
             _distAuxin.Clear();
             _isDenW = false;
             _rotation = new Vector3(0f, 0f, 0f);
-            _dirAgentGoal = _goalPosition - transform.position;
+            _dirAgentGoal = (_goalPosition - transform.position).normalized;
         }
 
         //walk
@@ -321,7 +320,7 @@ namespace Biocrowds.Core
             //distance between auxin´s distance and origin 
             float Ymodule = Vector3.Distance(_distAuxin[pRelationIndex], Vector3.zero);
             //distance between goal vector and origin
-            float Xmodule = _dirAgentGoal.normalized.magnitude;
+            float Xmodule = _dirAgentGoal.magnitude;
 
             float dot = Vector3.Dot(_distAuxin[pRelationIndex], _dirAgentGoal.normalized);
 
@@ -368,7 +367,7 @@ namespace Biocrowds.Core
             //get all auxins on my cell
             List<Auxin> cellAuxins = _currentCell.Auxins;
 
-            //iterate all cell auxins to check distance between auxins and agent
+            //iterate all cell auxins to check distance between auxins and agent 
             for (int i = 0; i < cellAuxins.Count; i++)
             {
                 //see if the distance between this agent and this auxin is smaller than the actual value, and inside agent radius
@@ -398,18 +397,27 @@ namespace Biocrowds.Core
         private void FindCell()
         {
             //distance from agent to cell, to define agent new cell
-            float distanceToCellSqr = (transform.position - _currentCell.transform.position).sqrMagnitude; //Vector3.Distance(transform.position, _currentCell.transform.position);
-
+            Vector3 relativeCellPos = _currentCell.transform.position - transform.position;
+            float distanceToCellSqr = relativeCellPos.sqrMagnitude;
+            
             //cap the limits - IN 3D!!!!
             //[ ][ ][ ]
             //[ ][X][ ]
             //[ ][ ][ ]
             for (int x = -1; x <= 1; x++)
             {
+                if (x != 0 && Mathf.Abs(relativeCellPos.x + x * _world.CELL_SIZE * 0.5f) > agentRadius)
+                    continue; // skip verifying cells on the other side of this dimension
+
                 for (int y = -1; y <= 1; y++)
                 {
+                    if (y != 0 && Mathf.Abs(relativeCellPos.y + y * _world.CELL_HEIGHT * 0.5f) > agentRadius)
+                        continue; // skip verifying cells on the other side of this dimension
+
                     for (int z = -1; z <= 1; z++)
                     {
+                        if (z != 0 && Mathf.Abs(relativeCellPos.z + z * _world.CELL_SIZE * 0.5f) > agentRadius)                        
+                            continue; // skip verifying cells on the other side of this dimension
                         if (x == 0 && y == 0 && z == 0)
                             continue;
 
