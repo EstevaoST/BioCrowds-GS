@@ -441,6 +441,9 @@ namespace Biocrowds.Core
         }
         private void CheckAuxins(ref float pDistToCellSqr, Cell pCell)
         {
+            if (pCell == null)
+                return;
+
             //get all auxins on neighbourcell
             List<Auxin> cellAuxins = pCell.Auxins;
 

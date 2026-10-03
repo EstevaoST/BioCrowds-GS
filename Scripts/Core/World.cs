@@ -198,6 +198,10 @@ namespace Biocrowds.Core
 
             yield return StartCoroutine(_markerSpawner.CreateMarkers(_cells, _auxins));
 
+            foreach (Cell c in _cells)
+                if(c.Auxins.Count == 0)
+                    GameObject.DestroyImmediate(c.gameObject);
+
             //populate cells with auxins
             //yield return StartCoroutine(DartThrowing());
 
@@ -401,13 +405,13 @@ namespace Biocrowds.Core
 
         protected Cell GetClosestCellToPoint (Vector3 point)
         {
-            float _minDist = Vector3.Distance(point, _cells[0].transform.position);
+            float _minDist = float.PositiveInfinity;
             int _minIndex = 0;
-            for (int i = 1; i < _cells.Count; i ++)
+            for (int i = 0; i < _cells.Count; i ++)
             {
-                if (Vector3.Distance(point, _cells[i].transform.position) < _minDist)
+                if (_cells[i] != null && Vector3.SqrMagnitude(point - _cells[i].transform.position) < _minDist)
                 {
-                    _minDist = Vector3.Distance(point, _cells[i].transform.position);
+                    _minDist = Vector3.SqrMagnitude(point - _cells[i].transform.position);
                     _minIndex = i;
                 }
             }
@@ -505,7 +509,7 @@ namespace Biocrowds.Core
 
             if (!found)
             {
-                Debug.LogError("Could not find cells with auxins to get point in area");
+                Debug.LogError($"Could not find cells with auxins to get point in area ({_area.name}) cell({c.name}, aux:{c.Auxins.Count})");
                 throw new System.Exception("Could not find cells with auxins to get point in area");
             }
 
@@ -526,7 +530,11 @@ namespace Biocrowds.Core
         public void ShowCellMeshes(bool p_enable)
         {
             foreach (Cell _c in Cells)
+            {
+                if (_c == null)
+                    continue;
                 _c.ShowMesh(p_enable);
+            }
         }
 
 
@@ -535,7 +543,6 @@ namespace Biocrowds.Core
             if(drawAuxins)
                 DrawAuxins();
         }
-
         public void DrawAuxins()
         {
             drawAxuxinMat.SetPass(0);
@@ -544,15 +551,17 @@ namespace Biocrowds.Core
             GL.MultMatrix(Matrix4x4.identity);
 
             GL.Begin(GL.QUADS);
-
-            foreach(var c in _cells)
+            foreach (var c in _cells)
+            {
+                if (c == null || !c.isActiveAndEnabled)
+                    continue;
                 foreach (var a in c.Auxins)
-                    DrawQuad(a.Position, a.Size);            
+                        DrawQuad(a.Position, a.Size);
+            }
             GL.End();
 
             GL.PopMatrix();
         }
-
         private void DrawQuad(Vector3 pos, float size)
         {
             float half = size * 0.5f;
