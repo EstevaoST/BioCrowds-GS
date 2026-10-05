@@ -52,6 +52,7 @@ namespace Biocrowds.Core
 
         [SerializeField]
         protected Vector3 _dimension = new Vector3(30.0f, 20.0f, 20.0f);
+        protected Vector3Int _total;
         public Vector3 Dimension
         {
             get { return _dimension; }
@@ -159,6 +160,9 @@ namespace Biocrowds.Core
         {
             this._dimension = dimension;
             this._offset = offset;
+            _total.x = 1 + (int)(dimension.x / CELL_SIZE);
+            _total.y = 1 + (int)(dimension.y / CELL_HEIGHT);
+            _total.z = 1 + (int)(dimension.z / CELL_SIZE);
         }
 
         public void LoadWorld()
@@ -418,13 +422,84 @@ namespace Biocrowds.Core
 
             return _cells[_minIndex];
         }
+        protected Cell SmartGetCellToPoint(Vector3 point)
+        {
+            Auxin a;
+            return SmartGetCellToPoint(point, out a);
+        }
+        protected Cell SmartGetCellToPoint(Vector3 point, out Auxin auxin)
+        {
+            Vector3Int cellPos = PointToCellPoint(point);
+            float _minDist = float.PositiveInfinity;
+            Cell  _nearCell = null;
+            Auxin _nearAuxin = null;
+
+            foreach (var c in GetSurroundingCells(cellPos))
+            {
+                if (c == null || c.Auxins.Count == 0)
+                    continue;
+                foreach(var a in c.Auxins)
+                {
+                    float aux = (point - a.Position).sqrMagnitude;
+                    if(aux < _minDist)
+                    {
+                        _minDist = aux;
+                        _nearCell = c;
+                        _nearAuxin = a;
+                    }
+                }
+            }
+            auxin = _nearAuxin;
+            return _nearCell;
+        }
+        public Vector3Int PointToCellPoint(Vector3 point)
+        {
+            Vector3Int cellPos = new Vector3Int();
+            point -= _offset;
+            cellPos.x = (int)(point.x / CELL_SIZE - 0.5f);
+            cellPos.y = (int)(point.y / CELL_HEIGHT);
+            cellPos.z = (int)(point.z / CELL_SIZE - 0.5f);
+            return cellPos;
+        }
+        public int CellPointToIndex(Vector3Int cellPoint)
+        {
+            return CellPointToIndex(cellPoint.x, cellPoint.y, cellPoint.z);
+        }
+        public int CellPointToIndex(int x, int y, int z)
+        {
+            if (x >= 0 && x < _total.x &&
+                y >= 0 && y < _total.y &&
+                z >= 0 && z < _total.z)                
+                return x * _total.z * _total.y + y * _total.z + z;
+            return -1;
+        }
+        public Cell[] GetSurroundingCells(Vector3Int cellPoint)
+        {
+            Cell[] cs = new Cell[27];
+            int c = 0;
+            for (int i = -1; i <= 1; i++)
+            {
+                for (int j = -1; j <= 1; j++)
+                {
+                    for (int k = -1; k <= 1; k++)
+                    {
+                        int index = CellPointToIndex(cellPoint.x + i, cellPoint.y + j, cellPoint.z + k);
+                        if(index == -1)                        
+                            cs[c++] = null;
+                        else
+                            cs[c++] = _cells[index];
+                    }
+                }
+            }
+            return cs;
+        }
 
         protected void SpawnNewAgent(Vector3 _pos, bool _removeWhenGoalReached, List<GameObject> _goalList)
         {
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)],
                                          _pos, Quaternion.identity, _agentsContainer);
             newAgent.name = "Agent [" + GetNewAgentID() + "]";  //name
-            newAgent.CurrentCell = GetClosestCellToPoint(_pos);
+            newAgent.CurrentCell = SmartGetCellToPoint(_pos);
             newAgent.agentRadius = AGENT_RADIUS;  //agent radius
             newAgent.Goal = _goalList[0];  //agent goal
             newAgent.goalsList = _goalList;
@@ -442,7 +517,7 @@ namespace Biocrowds.Core
             Agent newAgent = Instantiate(_agentPrefabList[Random.Range(0, _agentPrefabList.Count)], 
                 _pos, Quaternion.identity, _agentsContainer);
             newAgent.name = "Agent [" + GetNewAgentID() + "]";  //name
-            newAgent.CurrentCell = GetClosestCellToPoint(_pos);
+            newAgent.CurrentCell = SmartGetCellToPoint(_pos);
             newAgent.agentRadius = AGENT_RADIUS;  //agent radius
             newAgent.goalDistThreshold = GOAL_DISTANCE_THRESHOLD;
             if (_isInitialSpawn)
@@ -492,18 +567,16 @@ namespace Biocrowds.Core
         {
             Vector3 _pos;
             Cell c;
+            Auxin a;
             int tries = 0;
             bool found = false;
             do
             {
                 tries++;
                 // while cell is not traversable, randomize another cell
-                _pos = _area.GetRandomPoint();
-                c = GetClosestCellToPoint(_pos);
-                if (c.Auxins.Count <= 0) continue;
-
-                // get an auxin that it is fully inside the area
-                _pos = c.Auxins.OrderBy(x => (x.Position - _pos).sqrMagnitude).First().Position;
+                _pos = _area.GetRandomPoint();                
+                c = SmartGetCellToPoint(_pos, out a);
+                _pos = a.Position;
                 found = true;
             } while (!found && tries < 500);
 

@@ -69,10 +69,6 @@ namespace Biocrowds.Core
             set { _world = value; }
         }
 
-        private int _totalX;
-        private int _totalY;
-        private int _totalZ;
-
         private NavMeshPath _navMeshPath = null;
 
         public VisualAgent _visualAgent;
@@ -108,10 +104,6 @@ namespace Biocrowds.Core
                 _dirAgentGoal = (_goalPosition - transform.position).normalized;
             }
             if (_visualAgent != null) _visualAgent.Initialize(transform.position, this);
-            //cache world info
-            _totalX = 1 + (int)(_world.Dimension.x / _world.CELL_SIZE);
-            _totalY = 1 + (int)(_world.Dimension.y / _world.CELL_HEIGHT);
-            _totalZ = 1 + (int)(_world.Dimension.z / _world.CELL_SIZE);
 
             ResetPath();
         }
@@ -424,12 +416,7 @@ namespace Biocrowds.Core
                         int cellX = _currentCell.X + x;
                         int cellY = _currentCell.Y + y;
                         int cellZ = _currentCell.Z + z;
-                        if (cellX >= 0 && cellX < _totalX &&
-                            cellY >= 0 && cellY < _totalY &&
-                            cellZ >= 0 && cellZ < _totalZ)
-                        {
-                            CheckAuxins(ref distanceToCellSqr, cellX, cellY, cellZ);
-                        }
+                        CheckAuxins(ref distanceToCellSqr, cellX, cellY, cellZ);
                     }
                 }
             }                     
@@ -437,7 +424,11 @@ namespace Biocrowds.Core
 
         private void CheckAuxins(ref float pDistToCellSqr, int x, int y, int z)
         {
-            CheckAuxins(ref pDistToCellSqr, _world.Cells[x * _totalZ * _totalY + y * _totalZ + z]);
+            int index = _world.CellPointToIndex(x, y, z);
+            if (index < 0) 
+                return;
+
+            CheckAuxins(ref pDistToCellSqr, _world.Cells[index]);
         }
         private void CheckAuxins(ref float pDistToCellSqr, Cell pCell)
         {
