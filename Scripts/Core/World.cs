@@ -576,6 +576,8 @@ namespace Biocrowds.Core
                 // while cell is not traversable, randomize another cell
                 _pos = _area.GetRandomPoint();                
                 c = SmartGetCellToPoint(_pos, out a);
+                if (c == null || a == null)
+                    continue;
                 _pos = a.Position;
                 found = true;
             } while (!found && tries < 500);
