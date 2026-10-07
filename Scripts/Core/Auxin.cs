@@ -63,7 +63,7 @@ namespace Biocrowds.Core
         //Reset auxin to his default state, for each update
         public void ResetAuxin()
         {
-            _minDistance = 2.0f;
+            _minDistance = 2.0f * 2.0f;
             _agent = null;
             _isTaken = false;
         }

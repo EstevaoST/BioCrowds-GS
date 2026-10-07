@@ -218,7 +218,6 @@ namespace Biocrowds.Core
             _isFinished = false;
             _simulationTime = 0;
         }
-
         protected virtual IEnumerator CreateCells()
         {
             Transform cellPool = new GameObject("Cells").transform;
@@ -258,7 +257,6 @@ namespace Biocrowds.Core
             }
             yield return null;
         }        
-
         protected virtual IEnumerator CreateAgents()
         {
             _agentsContainer = new GameObject("Agents").transform;
@@ -313,8 +311,12 @@ namespace Biocrowds.Core
 
             //reset auxins
             for (int i = 0; i < _cells.Count; i++)
+            {
+                if (_cells[i] == null)
+                    continue;
                 for (int j = 0; j < _cells[i].Auxins.Count; j++)
                     _cells[i].Auxins[j].ResetAuxin();
+            }
 
            
 
@@ -406,7 +408,6 @@ namespace Biocrowds.Core
             if (_isFinished)
                 OnSimulationFinished?.Invoke();            
         }
-
         protected Cell GetClosestCellToPoint (Vector3 point)
         {
             float _minDist = float.PositiveInfinity;
@@ -424,8 +425,7 @@ namespace Biocrowds.Core
         }
         protected Cell SmartGetCellToPoint(Vector3 point)
         {
-            Auxin a;
-            return SmartGetCellToPoint(point, out a);
+            return SmartGetCellToPoint(point, out _);
         }
         protected Cell SmartGetCellToPoint(Vector3 point, out Auxin auxin)
         {
@@ -508,7 +508,6 @@ namespace Biocrowds.Core
             _agents.Add(newAgent);
             OnAgentSpawned?.Invoke(null, newAgent);
         }
-
         protected void SpawnNewAgentInArea(SpawnArea _area, bool _isInitialSpawn)
         {
             // Get a random point to a random cell
@@ -542,7 +541,6 @@ namespace Biocrowds.Core
             _agents.Add(newAgent);
             OnAgentSpawned?.Invoke(_area, newAgent);
         }
-
         protected void TeleportBufferedAgents(SpawnArea _area)
         {
             if (_area.teleportBuffer.Count == 0)
@@ -553,9 +551,16 @@ namespace Biocrowds.Core
             foreach (Agent agent in _area.teleportBuffer)
             {
                 if (area != null)
-                    agent.transform.position = GetRandomPoinInArea(area);
+                {
+                    Cell c;
+                    agent.transform.position = GetRandomPoinInArea(area, out c, out _);
+                    agent.CurrentCell = c;
+                }
                 else
+                {
                     agent.transform.position = goal.transform.position;
+                    agent.CurrentCell = SmartGetCellToPoint(agent.transform.position);
+                }
                 agent.wasTeleported = true;
 
                 area.AgentEntered(agent);
@@ -565,9 +570,13 @@ namespace Biocrowds.Core
 
         protected Vector3 GetRandomPoinInArea(SpawnArea _area)
         {
-            Vector3 _pos;
             Cell c;
             Auxin a;
+            return GetRandomPoinInArea(_area, out c, out a);
+        }
+        protected Vector3 GetRandomPoinInArea(SpawnArea _area, out Cell c, out Auxin a)
+        {
+            Vector3 _pos;
             int tries = 0;
             bool found = false;
             do
@@ -620,6 +629,14 @@ namespace Biocrowds.Core
         }
         public void DrawAuxins()
         {
+            if (!drawAuxins)
+                return;
+
+            if (drawAxuxinMat == null) 
+            { 
+                Debug.LogError("Material for drwing Auxin not set");
+                return;
+            }
             drawAxuxinMat.SetPass(0);
 
             GL.PushMatrix();
