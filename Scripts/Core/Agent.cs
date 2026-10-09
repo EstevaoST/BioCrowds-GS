@@ -17,7 +17,7 @@ namespace Biocrowds.Core
 {
     public class Agent : MonoBehaviour
     {
-        private const float UPDATE_NAVMESH_INTERVAL = 1.0f;
+        private const float UPDATE_NAVMESH_INTERVAL = 2.0f;
 
         //agent radius
         public float agentRadius;
@@ -70,6 +70,7 @@ namespace Biocrowds.Core
         }
 
         private NavMeshPath _navMeshPath = null;
+        private int _pathIndex = 0;
 
         public VisualAgent _visualAgent;
 
@@ -83,6 +84,8 @@ namespace Biocrowds.Core
         private float _denW;    //  avoid recalculation
         private Vector3 _rotation; //orientation vector (movement)
         private Vector3 _goalPosition; //goal position
+        private Plane? _goalBarrier = null; // barrier to cross for the next goal point
+
         private Vector3 _dirAgentGoal; //diff between goal and agent
 
         public int auxinCount;
@@ -100,8 +103,9 @@ namespace Biocrowds.Core
 
             if (Goal != null)
             {
-                _goalPosition = Goal.transform.position;
+                _goalPosition = Goal.transform.position;                
                 _dirAgentGoal = (_goalPosition - transform.position).normalized;
+                _goalBarrier = null;
             }
             if (_visualAgent != null) _visualAgent.Initialize(transform.position, this);
 
@@ -116,10 +120,7 @@ namespace Biocrowds.Core
             // Update the way to the goal every second.
             _elapsedTime += _timeStep;
 
-            if (_elapsedTime > UPDATE_NAVMESH_INTERVAL)
-            {
-                UpdateGoalPositionAndNavmesh();
-            }
+            UpdateGoalPositionAndNavmesh();
         }
 
 #if UNITY_EDITOR
@@ -168,33 +169,63 @@ namespace Biocrowds.Core
             if (goalsList == null || goalIndex < 0 || goalIndex >= goalsList.Count)
                 return;
 
-            _elapsedTime = 0.0f;
             Transform g = goalsList[goalIndex].transform;
-            //calculate agent path
-            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit1, agentRadius           , NavMesh.AllAreas) &&
-                NavMesh.SamplePosition(g.position        , out NavMeshHit hit2, g.lossyScale.magnitude, NavMesh.AllAreas) &&
-                NavMesh.CalculatePath(hit1.position, hit2.position, NavMesh.AllAreas, _navMeshPath) )
-            { 
-                //update its goal if path is found
-                int pIndex = 1;
-                if (pIndex >= _navMeshPath.corners.Length)
-                    pIndex = _navMeshPath.corners.Length - 1;
-                _goalPosition = _navMeshPath.corners[pIndex];
 
-                float sqrGoalDist = goalDistThreshold * goalDistThreshold;
-                while (pIndex < _navMeshPath.corners.Length - 1 && (transform.position - _goalPosition).sqrMagnitude < sqrGoalDist)
+            bool needRepath = _elapsedTime > UPDATE_NAVMESH_INTERVAL || _goalBarrier == null;
+            if (needRepath)
+            {
+                _elapsedTime = 0.0f;
+                //calculate agent path
+                if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit1, agentRadius, NavMesh.AllAreas) &&
+                    NavMesh.SamplePosition(g.position, out NavMeshHit hit2, g.lossyScale.magnitude, NavMesh.AllAreas) &&
+                    NavMesh.CalculatePath (hit1.position, hit2.position, NavMesh.AllAreas, _navMeshPath))
                 {
-                    // while the next position of the path is near enough, advance on it 
-                    pIndex++;
-                    _goalPosition = _navMeshPath.corners[pIndex];
+                    //update its goal if path is found
+                    _pathIndex = 1;
+                    if (_pathIndex >= _navMeshPath.corners.Length)
+                        _pathIndex = _navMeshPath.corners.Length - 1;
+                    _goalPosition = _navMeshPath.corners[_pathIndex];
+
+                    //float sqrGoalDist = goalDistThreshold * goalDistThreshold;
+                    //while (pIndex < _navMeshPath.corners.Length - 1 && (transform.position - _goalPosition).sqrMagnitude < sqrGoalDist)
+                    //{
+                    //    // while the next position of the path is near enough, advance on it 
+                    //    pIndex++;
+                    //    _goalPosition = _navMeshPath.corners[pIndex];
+                    //}
+                    _dirAgentGoal = (_goalPosition - _navMeshPath.corners[_pathIndex - 1]).normalized;
+                    _goalBarrier = new Plane(_dirAgentGoal, _goalPosition - _dirAgentGoal * goalDistThreshold);
+                }
+                else
+                {
+                    _goalPosition = goalsList[goalIndex].transform.position;
+                    _dirAgentGoal = (_goalPosition - transform.position).normalized;
+                    _goalBarrier = new Plane(_dirAgentGoal, _goalPosition - _dirAgentGoal * goalDistThreshold);
+                }
+
+                _dirAgentGoal = (_goalPosition - transform.position).normalized;
+            }
+            if (_goalBarrier is Plane b)
+            {
+                while(b.GetSide(transform.position)) // check if we don't have the barrier or have passed it
+                {
+                    _pathIndex++;
+                    if (_navMeshPath == null || _pathIndex >= _navMeshPath.corners.Length)
+                    {
+                        // force repath next cycle
+                        _elapsedTime = UPDATE_NAVMESH_INTERVAL;
+                        _goalBarrier = null;
+                    }
+                    else
+                    {
+                        _goalPosition = _navMeshPath.corners[_pathIndex];
+                        _dirAgentGoal = (_goalPosition - _navMeshPath.corners[_pathIndex - 1]).normalized;
+                        _goalBarrier = b = new Plane( _dirAgentGoal, _goalPosition);
+                        _goalBarrier?.Translate(-b.normal * goalDistThreshold);                        
+                        _dirAgentGoal = (_goalPosition - transform.position).normalized;
+                    }
                 }
             }
-            else
-            {
-                _goalPosition = goalsList[goalIndex].transform.position;                
-            }
-
-            _dirAgentGoal = (_goalPosition - transform.position).normalized;
         }
 
         public void UpdateVisualAgent()
@@ -498,6 +529,22 @@ namespace Biocrowds.Core
             {
                 return (Vector3.Distance(transform.position, goal.transform.position) <= goalDistThreshold);
             }
+        }
+
+
+        private void OnDrawGizmosSelected()
+        {
+            if (_goalBarrier is Plane p)
+            {
+                Gizmos.color = Color.green;
+                Vector3 center = _goalPosition;
+                Vector3 up = Vector3.ProjectOnPlane(Vector3.up, p.normal).normalized;
+                Vector3 right = Vector3.Cross(up, p.normal).normalized;
+                Gizmos.DrawRay(center, p.normal * 2);
+                Gizmos.DrawRay(center, up * 2);
+                Gizmos.DrawRay(center, right * 2);
+            }
+            Gizmos.color = Color.grey;
         }
     }
 }
