@@ -276,6 +276,7 @@ namespace Biocrowds.Core
                 {
                     isWaiting = false;
                     goalIndex++;
+                    Goal = goalsList[goalIndex];
                     UpdateGoalPositionAndNavmesh();
                 }
             }
@@ -290,6 +291,7 @@ namespace Biocrowds.Core
                 {
                     waitCount = 0.0f;
                     goalIndex++;
+                    Goal = goalsList[goalIndex];
                     UpdateGoalPositionAndNavmesh();
                 }
             }

@@ -111,6 +111,7 @@ public class SpawnArea : MonoBehaviour
             agent.goalsList.Clear();
             agent.goalsList.AddRange(enteringGoalList);
             agent.goalIndex = 0;
+            agent.Goal = agent.goalsList[agent.goalIndex];
             agent.ResetPath();
         }
 
