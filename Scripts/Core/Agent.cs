@@ -207,14 +207,17 @@ namespace Biocrowds.Core
             }
             if (_goalBarrier is Plane b)
             {
-                while(b.GetSide(transform.position)) // check if we don't have the barrier or have passed it
+                while (b.GetSide(transform.position)) // check if we don't have the barrier or have passed it
                 {
                     _pathIndex++;
-                    if (_navMeshPath == null || _pathIndex >= _navMeshPath.corners.Length)
+                    if (_navMeshPath == null || 
+                        _pathIndex >= _navMeshPath.corners.Length || 
+                        _pathIndex < 1)
                     {
                         // force repath next cycle
                         _elapsedTime = UPDATE_NAVMESH_INTERVAL;
                         _goalBarrier = null;
+                        break;
                     }
                     else
                     {

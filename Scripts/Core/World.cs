@@ -41,6 +41,7 @@ namespace Biocrowds.Core
         [SerializeField] public float AUXIN_DENSITY = 0.50f;
 
         [SerializeField] public float GOAL_DISTANCE_THRESHOLD = 1.0f;
+        [SerializeField] public float TELEPORT_COOLDOWN_SPEED_BY_WIDTH = 1.0f;
 
 
         [Header("Terrain Setting")]
@@ -368,6 +369,7 @@ namespace Biocrowds.Core
             // teleporta agentes buffered de cada spawn
             foreach (SpawnArea _area in spawnAreas)
             {
+                _area.teleportCooldown -= deltaTime * TELEPORT_COOLDOWN_SPEED_BY_WIDTH * _area.transform.localScale.x;
                 TeleportBufferedAgents(_area);
             }
             
@@ -543,29 +545,29 @@ namespace Biocrowds.Core
         }
         protected void TeleportBufferedAgents(SpawnArea _area)
         {
-            if (_area.teleportBuffer.Count == 0)
+            if (_area.teleportCooldown > 0)
                 return;
+            if (_area.teleportBuffer.Count == 0)
+                return;            
 
             GameObject goal = _area.enteringGoalList[0];
             SpawnArea area = goal.GetComponentInChildren<SpawnArea>();
-            foreach (Agent agent in _area.teleportBuffer)
+            Agent agent = _area.teleportBuffer.First();            
+            _area.teleportBuffer.Remove(agent);
+            if (area != null)
             {
-                if (area != null)
-                {
-                    Cell c;
-                    agent.transform.position = GetRandomPoinInArea(area, out c, out _);
-                    agent.CurrentCell = c;
-                }
-                else
-                {
-                    agent.transform.position = goal.transform.position;
-                    agent.CurrentCell = SmartGetCellToPoint(agent.transform.position);
-                }
-                agent.wasTeleported = true;
-
-                area.AgentEntered(agent);
+                Cell c;
+                agent.transform.position = GetRandomPoinInArea(area, out c, out _);
+                agent.CurrentCell = c;
             }
-            _area.teleportBuffer.Clear();
+            else
+            {
+                agent.transform.position = goal.transform.position;
+                agent.CurrentCell = SmartGetCellToPoint(agent.transform.position);
+            }
+            agent.wasTeleported = true;
+            area.AgentEntered(agent);
+            _area.teleportCooldown = 1;
         }
 
         protected Vector3 GetRandomPoinInArea(SpawnArea _area)

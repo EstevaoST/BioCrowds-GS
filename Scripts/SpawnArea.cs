@@ -29,7 +29,8 @@ public class SpawnArea : MonoBehaviour
     public bool setGoalOnEnter = false;
     public bool teleportToGoalOnEnter = false;
     public List<GameObject> enteringGoalList;
-    public List<Agent> teleportBuffer;
+    public List<Agent> teleportBuffer;    
+    public float teleportCooldown = 0f;
 
     public bool CycleReady { get => cycleReady;  }
     public bool Finished => (limitRepeatingSpawn && quantityLimitToSpawn <= 0) || quantitySpawnedEachCycle == 0;
