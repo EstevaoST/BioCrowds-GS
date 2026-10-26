@@ -36,6 +36,9 @@ public class SpawnArea : MonoBehaviour
     public bool Finished => (limitRepeatingSpawn && quantityLimitToSpawn <= 0) || quantitySpawnedEachCycle == 0;
     public Collider Collider => _collider;
 
+    public HashSet<Agent> agentInsideCache = new HashSet<Agent>();
+    public float AgentDensity => agentInsideCache.Count / (transform.lossyScale.x * transform.lossyScale.z);
+
     private void Awake()
     {
         if (_collider == null)
@@ -107,6 +110,8 @@ public class SpawnArea : MonoBehaviour
 
     public void AgentEntered(Agent agent)
     {
+        agentInsideCache.Add(agent);
+
         if (setGoalOnEnter)
         {
             agent.goalsList.Clear();
@@ -120,5 +125,9 @@ public class SpawnArea : MonoBehaviour
         {
             teleportBuffer.Add(agent);
         }
+    }
+    public void AgentExited(Agent agent)
+    {
+        agentInsideCache.Remove(agent);
     }
 }

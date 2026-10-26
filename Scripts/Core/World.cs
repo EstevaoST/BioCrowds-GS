@@ -41,7 +41,7 @@ namespace Biocrowds.Core
         [SerializeField] public float AUXIN_DENSITY = 0.50f;
 
         [SerializeField] public float GOAL_DISTANCE_THRESHOLD = 1.0f;
-        [SerializeField] public float TELEPORT_COOLDOWN_SPEED_BY_WIDTH = 1.0f;
+        [SerializeField] public float TELEPORT_DENSITY_MIN = 1.0f;
 
 
         [Header("Terrain Setting")]
@@ -366,11 +366,18 @@ namespace Biocrowds.Core
                 _agents[i].wasTeleported = false;
             }
 
-            // teleporta agentes buffered de cada spawn
+            // teleport agentes buffered de cada spawn
+            foreach (SpawnArea _area in Randomize(spawnAreas))
+            {
+                TeleportBufferedAgents(_area);
+            }
             foreach (SpawnArea _area in spawnAreas)
             {
-                _area.teleportCooldown -= deltaTime * TELEPORT_COOLDOWN_SPEED_BY_WIDTH * _area.transform.localScale.x;
-                TeleportBufferedAgents(_area);
+                var exiting = _area.agentInsideCache.Where(x => !_area.IsInsideArea(x.transform.position, CELL_HEIGHT)).ToList();
+                foreach (Agent a in exiting)
+                {
+                    _area.AgentExited(a);
+                }
             }
             
             for (int i = 0; i < _agents.Count; i++)
@@ -545,19 +552,21 @@ namespace Biocrowds.Core
         }
         protected void TeleportBufferedAgents(SpawnArea _area)
         {
-            if (_area.teleportCooldown > 0)
-                return;
             if (_area.teleportBuffer.Count == 0)
                 return;            
 
             GameObject goal = _area.enteringGoalList[0];
-            SpawnArea area = goal.GetComponentInChildren<SpawnArea>();
-            Agent agent = _area.teleportBuffer.First();            
+            SpawnArea tArea = goal.GetComponentInChildren<SpawnArea>();
+            Agent agent = _area.teleportBuffer.First();
+
+            if (tArea.AgentDensity > TELEPORT_DENSITY_MIN)
+                return;
+            
             _area.teleportBuffer.Remove(agent);
-            if (area != null)
+            if (tArea != null)
             {
                 Cell c;
-                agent.transform.position = GetRandomPoinInArea(area, out c, out _);
+                agent.transform.position = GetRandomPoinInArea(tArea, out c, out _);
                 agent.CurrentCell = c;
             }
             else
@@ -566,7 +575,7 @@ namespace Biocrowds.Core
                 agent.CurrentCell = SmartGetCellToPoint(agent.transform.position);
             }
             agent.wasTeleported = true;
-            area.AgentEntered(agent);
+            tArea.AgentEntered(agent);
             _area.teleportCooldown = 1;
         }
 
@@ -668,6 +677,30 @@ namespace Biocrowds.Core
             GL.Vertex(pos +  r - u);
             GL.Vertex(pos + -r - u);
             GL.Vertex(pos + -r + u);            
+        }
+
+
+        // utils
+        public E[] Randomize<E>(List<E> list)
+        {
+            int[] pos = new int[list.Count];
+            for (int i = 0; i < list.Count; i++)
+                pos[i] = i;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                int i2 = Random.Range(0, list.Count);
+                int aux = pos[i2];
+                pos[i2] = pos[i];
+                pos[i] = aux;
+            }
+
+            E[] result = new E[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                result[i] = list[pos[i]];
+            }
+            return result;
         }
     }
 }
