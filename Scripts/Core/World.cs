@@ -98,6 +98,7 @@ namespace Biocrowds.Core
         {
             get { return _auxins; }
         }
+        public List<Auxin> auxinResetCache = new List<Auxin>();
 
         [SerializeField]
         protected MarkerSpawner _markerSpawner = null;
@@ -310,22 +311,30 @@ namespace Biocrowds.Core
                 _agents[i].UpdateVisualAgent();
 
             //reset auxins
-            for (int i = 0; i < _cells.Count; i++)
+            foreach (Auxin aux in auxinResetCache)
+            {
+                aux.ResetAuxin();
+            }
+            auxinResetCache.Clear();
+            /*for (int i = 0; i < _cells.Count; i++)
             {
                 if (_cells[i] == null)
                     continue;
                 for (int j = 0; j < _cells[i].Auxins.Count; j++)
                     _cells[i].Auxins[j].ResetAuxin();
-            }
+            }*/
 
-           
+
 
             //find nearest auxins for each agent
             for (int i = 0; i < _agents.Count; i++)
                 _agents[i].FindNearAuxins();
 
             for (int i = 0; i < _agents.Count; i++)
+            {
                 _agents[i].auxinCount = _agents[i].Auxins.Count;
+                auxinResetCache.AddRange(_agents[i].Auxins);
+            }
             /*
              * to find where the agent must move, we need to get the vectors from the agent to each auxin he has, and compare with 
              * the vector from agent to goal, generating a angle which must lie between 0 (best case) and 180 (worst case)
